@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="fr" data-mode="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>[VOTRE NOM] — Assistant architecte · Planche A-01</title>
+<meta name="description" content="Assistant architecte indépendant. Je prends en charge la production graphique, la modélisation BIM, les dossiers et le suivi de projet des cabinets d'architecture.">
+<style>
+:root{
+  --pap:#F3F2EE; --ink:#131A20; --mut:#7B7A73; --thin:#CFCCC3; --thin2:#E3E0D8;
+  --acc:#1E4FD8; --red:#C8341A; --panel:#FFFFFF;
+  --mono:ui-monospace,'SF Mono',Menlo,Consolas,'Courier New',monospace;
+  --sans:'Helvetica Neue',Helvetica,Arial,sans-serif;
+  --e:cubic-bezier(.22,1,.26,1);
+  --ruler:22px;
+}
+html[data-mode="blue"]{
+  --pap:#07203F; --ink:#E2EDFB; --mut:#6E92BE; --thin:#1C4878; --thin2:#133258;
+  --acc:#4FC3F7; --red:#FF7A5C; --panel:#0B2B51;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:calc(var(--ruler) + 86px)}
+body{
+  background:var(--pap);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+  transition:background .45s var(--e),color .45s var(--e);
+}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+::selection{background:var(--acc);color:#fff}
+body.lock{overflow:hidden}
+
+/* ---------- TRAME DE FOND (calque GRILLE) ---------- */
+#grid{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0;transition:opacity .5s}
+body.l-grid #grid{opacity:1}
+#grid .fine,#grid .coarse{position:absolute;inset:0}
+#grid .fine{background-image:linear-gradient(var(--thin2) 1px,transparent 1px),linear-gradient(90deg,var(--thin2) 1px,transparent 1px);background-size:20px 20px;opacity:.75}
+#grid .coarse{background-image:linear-gradient(var(--thin) 1px,transparent 1px),linear-gradient(90deg,var(--thin) 1px,transparent 1px);background-size:100px 100px;opacity:.5}
+main,header,footer{position:relative;z-index:2}
+
+/* ---------- RÈGLES ---------- */
+.ruler{position:fixed;z-index:60;background:var(--pap);border-color:var(--thin);pointer-events:none;font-family:var(--mono);font-size:7px;color:var(--mut)}
+#rtop{top:0;left:0;right:0;height:var(--ruler);border-bottom:1px solid var(--thin);
+  background-image:repeating-linear-gradient(90deg,var(--thin) 0 1px,transparent 1px 10px),repeating-linear-gradient(90deg,var(--thin) 0 1px,transparent 1px 50px);
+  background-size:10px 6px,50px 11px;background-position:bottom left;background-repeat:repeat-x}
+#rleft{top:0;bottom:0;left:0;width:var(--ruler);border-right:1px solid var(--thin);
+  background-image:repeating-linear-gradient(180deg,var(--thin) 0 1px,transparent 1px 10px),repeating-linear-gradient(180deg,var(--thin) 0 1px,transparent 1px 50px);
+  background-size:6px 10px,11px 50px;background-position:left top;background-repeat:repeat-y}
+.rmark{position:absolute;background:var(--red)}
+#mx{top:0;width:1px;height:100%}
+#my{left:0;height:1px;width:100%}
+@media(max-width:860px){.ruler{display:none}:root{--ruler:0px}}
+
+/* ---------- RÉTICULE ---------- */
+#cross i{position:fixed;background:var(--acc);opacity:.35;z-index:55;pointer-events:none;transition:opacity .3s}
+#cross .h{left:0;right:0;height:1px}
+#cross .v{top:0;bottom:0;width:1px}
+body:not(.l-cross) #cross i{opacity:0}
+@media(hover:none),(pointer:coarse){#cross{display:none}}
+
+/* ---------- CADRE DE PLANCHE ---------- */
+.sheet{margin:calc(var(--ruler) + 48px) 10px 10px;border:1px solid var(--thin);position:relative;min-height:calc(100vh - var(--ruler) - 20px)}
+.sheet::before,.sheet::after{content:"";position:absolute;width:9px;height:9px;border:1px solid var(--acc)}
+.sheet::before{top:-5px;left:-5px}
+.hatch-host{position:relative}
+.hatch-host::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .45s;background-image:repeating-linear-gradient(45deg,var(--thin) 0 1px,transparent 1px 8px)}
+body.l-hatch .hatch-host::after{opacity:.55}
+body.l-hatch .gauge i{background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.5) 0 1px,transparent 1px 5px)}
+body.l-hatch .stamp{background-image:repeating-linear-gradient(45deg,color-mix(in srgb,var(--red) 22%,transparent) 0 1px,transparent 1px 9px)}
+.sheet::after{bottom:-5px;right:-5px}
+.pad{padding:clamp(18px,4vw,54px)}
+
+/* ---------- TYPO ---------- */
+.mono{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--mut)}
+.mono b{color:var(--acc);font-weight:400}
+h1,h2,h3{font-weight:600;letter-spacing:-.02em;line-height:1.02;text-transform:uppercase}
+h1{font-size:clamp(2rem,5.4vw,4.6rem)}
+h2{font-size:clamp(1.5rem,3.4vw,2.9rem)}
+h3{font-size:clamp(1rem,1.6vw,1.25rem);letter-spacing:.01em}
+p{color:var(--mut);font-size:14.5px}
+.lead{color:var(--ink);font-size:clamp(14.5px,1.3vw,17px);max-width:54ch}
+.red{color:var(--red)}
+.acc{color:var(--acc)}
+
+/* ---------- ENTÊTE DE SECTION ---------- */
+.shead{display:flex;justify-content:space-between;gap:16px;align-items:center;border-bottom:1px solid var(--thin);padding:10px clamp(18px,4vw,54px);flex-wrap:wrap;position:sticky;top:calc(var(--ruler) + 38px);background:color-mix(in srgb,var(--pap) 92%,transparent);backdrop-filter:blur(6px);z-index:40}
+.shead .ref{font-family:var(--mono);font-size:10px;letter-spacing:.13em;color:var(--acc)}
+section{border-bottom:1px solid var(--thin)}
+section:last-of-type{border-bottom:none}
+
+/* ---------- COTES (calque) ---------- */
+.dim{position:relative;height:1px;background:var(--acc);margin:26px 0 30px;transform:scaleX(0);transform-origin:left;transition:transform 1s var(--e);opacity:0}
+body.l-dim .dim{opacity:1}
+body:not(.l-dim) .dim{display:none}
+.in .dim{transform:scaleX(1)}
+.dim::before,.dim::after{content:"";position:absolute;top:-4px;width:1px;height:9px;background:var(--acc)}
+.dim::before{left:0}.dim::after{right:0}
+.dim span{position:absolute;left:50%;top:-18px;transform:translateX(-50%);font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--acc);background:var(--pap);padding:0 8px;white-space:nowrap}
+.note{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--red);display:inline-flex;gap:7px;align-items:center}
+.note::before{content:"";width:16px;height:1px;background:var(--red)}
+body:not(.l-annot) .note{display:none}
+
+/* ---------- HACHURES (calque) ---------- */
+.hatch{background-image:repeating-linear-gradient(45deg,var(--thin) 0 1px,transparent 1px 7px);opacity:0;transition:opacity .4s}
+body.l-hatch .hatch{opacity:1}
+
+/* ---------- RÉVÉLATION ---------- */
+.rv{opacity:0;transform:translateY(16px);transition:opacity .8s var(--e),transform .8s var(--e)}
+.rv.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){.rv{opacity:1;transform:none}.dim{transform:scaleX(1)}*{transition-duration:.01ms!important;animation:none!important}}
+
+/* ---------- BARRE HAUTE ---------- */
+header{position:fixed;top:var(--ruler);left:0;right:0;z-index:50;background:color-mix(in srgb,var(--pap) 90%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--thin)}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:14px;height:38px;padding:0 12px}
+.brand{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;display:flex;gap:9px;align-items:center}
+.brand i{width:8px;height:8px;border:1px solid var(--acc);display:block;background:var(--acc);animation:bl 2.4s infinite}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.25}}
+.nlinks{display:flex;gap:3px}
+.nlinks a{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);padding:5px 8px;border:1px solid transparent;transition:all .25s}
+.nlinks a:hover{color:var(--ink);border-color:var(--thin)}
+.nlinks a.act{color:var(--acc);border-color:var(--acc)}
+@media(max-width:1060px){.nlinks{display:none}}
+.tool{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);background:transparent;border:1px solid var(--thin);padding:5px 9px;cursor:pointer;transition:all .25s}
+.tool:hover{border-color:var(--ink);color:var(--ink)}
+.tool.on{background:var(--acc);border-color:var(--acc);color:#fff}
+
+/* ---------- PANNEAU CALQUES ---------- */
+#layers{position:fixed;left:calc(var(--ruler) + 10px);bottom:12px;z-index:70;width:188px;background:var(--panel);border:1px solid var(--thin);transition:transform .45s var(--e)}
+#layers.min{transform:translateY(calc(100% - 27px))}
+#layers .lh{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-bottom:1px solid var(--thin);cursor:pointer}
+#layers .lb{padding:5px 0}
+.lrow{display:flex;align-items:center;gap:9px;padding:5px 10px;cursor:pointer;font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);transition:background .2s,color .2s}
+.lrow:hover{background:color-mix(in srgb,var(--acc) 8%,transparent);color:var(--ink)}
+.lrow .bx{width:11px;height:11px;border:1px solid var(--mut);position:relative;flex:none}
+.lrow.on .bx{background:var(--acc);border-color:var(--acc)}
+.lrow.on .bx::after{content:"";position:absolute;left:3px;top:.5px;width:3px;height:6px;border:solid #fff;border-width:0 1.5px 1.5px 0;transform:rotate(42deg)}
+.lrow.on{color:var(--ink)}
+.lrow .kk{margin-left:auto;opacity:.5}
+@media(max-width:860px){#layers{display:none}}
+
+/* ---------- CARTOUCHE ---------- */
+#cart{position:fixed;right:12px;bottom:12px;z-index:70;width:268px;background:var(--panel);border:1px solid var(--ink);transition:transform .45s var(--e)}
+#cart.min{transform:translateY(calc(100% - 27px))}
+#cart .ch{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:var(--ink);color:var(--pap);cursor:pointer}
+#cart .ch span{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase}
+.crow{display:grid;grid-template-columns:72px 1fr;border-bottom:1px solid var(--thin2)}
+.crow:last-child{border-bottom:none}
+.crow dt,.crow dd{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:5px 9px}
+.crow dt{color:var(--mut);border-right:1px solid var(--thin2)}
+.crow dd{color:var(--ink)}
+@media(max-width:860px){#cart{display:none}}
+
+/* ---------- BOUTONS ---------- */
+.btn{display:inline-flex;align-items:center;gap:10px;border:1px solid var(--ink);background:transparent;color:var(--ink);padding:11px 18px;font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;cursor:pointer;position:relative;transition:color .3s var(--e),border-color .3s}
+.btn::before{content:"";position:absolute;inset:0;background:var(--ink);transform:scaleY(0);transform-origin:bottom;transition:transform .35s var(--e);z-index:0}
+.btn span{position:relative;z-index:1}
+.btn:hover{color:var(--pap)}
+.btn:hover::before{transform:scaleY(1)}
+.btn.pri{border-color:var(--acc);color:#fff}
+.btn.pri::before{background:var(--acc);transform:scaleY(1)}
+.btn.pri:hover::before{background:var(--ink)}
+
+/* ---------- A-01 PAGE DE GARDE ---------- */
+.cover{display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center;min-height:calc(100vh - 150px)}
+@media(max-width:980px){.cover{grid-template-columns:1fr;gap:26px;min-height:0;padding-top:20px}}
+.tiny-tbl{display:grid;grid-template-columns:repeat(3,auto);gap:0;border:1px solid var(--thin);width:max-content;max-width:100%;margin-bottom:26px}
+.tiny-tbl div{border-right:1px solid var(--thin);padding:6px 11px;font-family:var(--mono);font-size:9px;letter-spacing:.11em;text-transform:uppercase;color:var(--mut)}
+.tiny-tbl div:last-child{border-right:none}
+.tiny-tbl b{color:var(--acc);font-weight:400}
+.axo{position:relative}
+.axo svg{width:100%;height:auto;overflow:visible}
+.axo path,.axo line,.axo polygon{vector-effect:non-scaling-stroke}
+.draw{stroke-dasharray:1400;stroke-dashoffset:1400;animation:draw 2.6s var(--e) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.lead-note{position:absolute;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--acc);white-space:nowrap}
+body:not(.l-annot) .lead-note{display:none}
+
+/* ---------- A-02 DIAGNOSTIC ---------- */
+.diag{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--thin)}
+@media(max-width:900px){.diag{grid-template-columns:1fr}}
+.dcell{background:var(--pap);padding:28px 22px;position:relative;transition:background .35s}
+.dcell:hover{background:var(--panel)}
+.dcell .pc{font-size:clamp(2.4rem,5.5vw,4.2rem);font-weight:600;letter-spacing:-.04em;line-height:.9}
+.dcell .pc sup{font-size:.26em;color:var(--acc);vertical-align:super}
+.gauge{height:7px;border:1px solid var(--thin);margin:16px 0 14px;position:relative}
+.gauge i{position:absolute;inset:0;right:auto;width:0;background:var(--acc);transition:width 1.3s var(--e)}
+.dcell h3{margin-bottom:8px}
+
+/* ---------- A-03 NOMENCLATURE ---------- */
+.tbl-head,.nrow{display:grid;grid-template-columns:62px 1fr 150px 92px 30px;gap:14px;align-items:center}
+@media(max-width:860px){.tbl-head,.nrow{grid-template-columns:48px 1fr 30px}.tbl-head .hd3,.tbl-head .hd4,.nrow .c3,.nrow .c4{display:none}}
+.tbl-head{padding:9px clamp(18px,4vw,54px);border-bottom:1px solid var(--ink);font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+.nitem{border-bottom:1px solid var(--thin)}
+.nrow{padding:16px clamp(18px,4vw,54px);cursor:pointer;transition:background .3s,padding-left .35s var(--e)}
+.nitem:hover .nrow{background:var(--panel);padding-left:calc(clamp(18px,4vw,54px) + 8px)}
+.nitem.open .nrow{background:var(--panel)}
+.nrow .c1{font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:.1em}
+.nrow .c2{font-size:clamp(1rem,1.9vw,1.45rem);font-weight:600;text-transform:uppercase;letter-spacing:-.01em}
+.nrow .c3,.nrow .c4{font-family:var(--mono);font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--mut)}
+.nrow .c5{justify-self:end;width:17px;height:17px;position:relative}
+.nrow .c5::before,.nrow .c5::after{content:"";position:absolute;background:var(--ink);transition:transform .35s var(--e),background .3s}
+.nrow .c5::before{top:50%;left:0;width:100%;height:1px}
+.nrow .c5::after{left:50%;top:0;height:100%;width:1px}
+.nitem.open .c5::after{transform:rotate(90deg)}
+.nitem.open .c5::before,.nitem.open .c5::after{background:var(--acc)}
+.npanel{display:grid;grid-template-rows:0fr;transition:grid-template-rows .5s var(--e);background:var(--panel)}
+.nitem.open .npanel{grid-template-rows:1fr}
+.npanel>div{overflow:hidden}
+.nin{display:grid;grid-template-columns:62px 1.1fr .9fr;gap:22px;padding:4px clamp(18px,4vw,54px) 30px}
+@media(max-width:860px){.nin{grid-template-columns:1fr;padding-top:0}}
+.nin ul{list-style:none;display:grid;gap:7px;margin-top:14px}
+.nin li{font-size:13.5px;color:var(--mut);display:grid;grid-template-columns:14px 1fr;gap:8px}
+.nin li::before{content:"+";color:var(--acc);font-family:var(--mono);font-size:11px}
+.shot{border:1px solid var(--thin);overflow:hidden;display:none}
+body.l-photo .shot{display:block}
+.shot img{width:100%;aspect-ratio:4/3;object-fit:cover;filter:grayscale(1) contrast(1.08);transition:filter .5s,transform .6s var(--e)}
+html[data-mode="blue"] .shot img{filter:grayscale(1) brightness(.75) sepia(1) hue-rotate(175deg) saturate(2.4)}
+.shot:hover img{transform:scale(1.04)}
+
+/* ---------- A-04 BORDEREAU ---------- */
+.bord{display:grid;grid-template-columns:1.25fr .75fr;gap:34px}
+@media(max-width:980px){.bord{grid-template-columns:1fr}}
+.brow{display:grid;grid-template-columns:1fr 128px 92px;gap:12px;align-items:center;border-bottom:1px solid var(--thin);padding:13px 0}
+@media(max-width:620px){.brow{grid-template-columns:1fr 112px;row-gap:6px}.brow .bsum{grid-column:2;text-align:right}}
+.brow .bn{font-size:14.5px;font-weight:600;text-transform:uppercase;letter-spacing:-.01em}
+.brow .bu{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--mut);display:block;margin-top:3px;text-transform:uppercase}
+.step{display:flex;border:1px solid var(--thin);width:max-content}
+.step button{width:30px;height:30px;background:transparent;border:none;color:var(--ink);font-family:var(--mono);font-size:13px;cursor:pointer;transition:background .2s}
+.step button:hover{background:var(--acc);color:#fff}
+.step .q{width:50px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;border-left:1px solid var(--thin);border-right:1px solid var(--thin)}
+.brow.act{background:color-mix(in srgb,var(--acc) 7%,transparent)}
+.bsum{font-family:var(--mono);font-size:11px;text-align:right;color:var(--mut)}
+.brow.act .bsum{color:var(--acc)}
+.total{border:1px solid var(--ink);position:sticky;top:calc(var(--ruler) + 96px)}
+.total .tc{padding:18px;border-bottom:1px solid var(--thin)}
+.total .tc:last-child{border-bottom:none}
+.total .tv{font-size:clamp(1.8rem,4vw,2.9rem);font-weight:600;letter-spacing:-.04em;line-height:1}
+.total .tv sup{font-size:.3em;color:var(--acc);vertical-align:super}
+.switch{display:inline-flex;border:1px solid var(--thin)}
+.switch button{background:transparent;border:none;font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;padding:6px 11px;color:var(--mut);cursor:pointer;transition:all .22s}
+.switch button.on{background:var(--ink);color:var(--pap)}
+.rate{display:flex;align-items:center;gap:12px;margin-bottom:22px;flex-wrap:wrap}
+.rate input[type=range]{-webkit-appearance:none;appearance:none;flex:1;min-width:140px;height:1px;background:var(--thin);outline:none}
+.rate input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;background:var(--acc);cursor:pointer;border-radius:0;transform:rotate(45deg);transition:transform .2s}
+.rate input[type=range]::-webkit-slider-thumb:hover{transform:rotate(45deg) scale(1.3)}
+.rate input[type=range]::-moz-range-thumb{width:13px;height:13px;background:var(--acc);border:none;cursor:pointer}
+.toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);background:var(--ink);color:var(--pap);font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:11px 18px;z-index:200;opacity:0;pointer-events:none;transition:all .4s var(--e)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- A-05 PROCÉDURE ---------- */
+.proc{position:relative;padding-left:62px}
+@media(max-width:700px){.proc{padding-left:34px}}
+.proc .spine{position:absolute;left:18px;top:6px;bottom:6px;width:1px;background:var(--thin2)}
+.proc .spine i{position:absolute;left:0;top:0;width:1px;background:var(--acc);height:0}
+.pstep{position:relative;padding:0 0 38px}
+.pstep::before{content:"";position:absolute;left:-50px;top:5px;width:9px;height:9px;border:1px solid var(--acc);background:var(--pap);transform:rotate(45deg);transition:background .4s}
+@media(max-width:700px){.pstep::before{left:-21px}}
+.pstep.in::before{background:var(--acc)}
+.pstep .pn{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;color:var(--acc);margin-bottom:7px}
+.pstep p{margin-top:7px;max-width:62ch}
+
+/* ---------- A-06 NOTE ---------- */
+.intent{display:grid;grid-template-columns:1fr auto;gap:36px;align-items:end}
+@media(max-width:860px){.intent{grid-template-columns:1fr}}
+.intent q{display:block;font-size:clamp(1.3rem,3.4vw,2.6rem);font-weight:600;text-transform:uppercase;letter-spacing:-.025em;line-height:1.08;quotes:none;max-width:22ch}
+.intent q em{font-style:normal;color:var(--acc);text-decoration:underline;text-underline-offset:6px;text-decoration-thickness:1px}
+.stamp{border:1px solid var(--red);color:var(--red);padding:14px 18px;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;transform:rotate(-3deg);line-height:1.7}
+
+/* ---------- A-07 RÉSERVES ---------- */
+.qa{border-top:1px solid var(--thin)}
+.qitem{border-bottom:1px solid var(--thin)}
+.qh{width:100%;display:grid;grid-template-columns:62px 1fr 20px;gap:14px;align-items:center;background:transparent;border:none;color:var(--ink);text-align:left;padding:17px clamp(18px,4vw,54px);cursor:pointer;font-family:var(--sans);font-size:clamp(.95rem,1.7vw,1.15rem);font-weight:600;text-transform:uppercase;letter-spacing:-.01em;transition:background .3s}
+.qh:hover{background:var(--panel)}
+.qh .qn{font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:.1em;font-weight:400}
+.qh .qp{justify-self:end;font-family:var(--mono);color:var(--acc)}
+.qbody{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s var(--e)}
+.qitem.open .qbody{grid-template-rows:1fr}
+.qbody>div{overflow:hidden}
+.qbody p{padding:0 clamp(18px,4vw,54px) 20px calc(clamp(18px,4vw,54px) + 76px);max-width:86ch}
+@media(max-width:860px){.qbody p{padding-left:clamp(18px,4vw,54px)}}
+
+/* ---------- A-08 TRANSMISSION ---------- */
+.tx{display:grid;grid-template-columns:1fr 1fr;gap:40px}
+@media(max-width:900px){.tx{grid-template-columns:1fr;gap:28px}}
+.clist a{display:flex;justify-content:space-between;gap:14px;border-bottom:1px solid var(--thin);padding:13px 0;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;transition:padding-left .35s var(--e),color .3s}
+.clist a:hover{padding-left:9px;color:var(--acc)}
+form{display:grid;gap:14px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.frow{grid-template-columns:1fr}}
+.fld label{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);display:block;margin-bottom:5px}
+.fld input,.fld textarea,.fld select{width:100%;background:var(--panel);border:1px solid var(--thin);color:var(--ink);padding:10px 11px;font-family:var(--sans);font-size:14px;outline:none;transition:border-color .25s;border-radius:0}
+.fld input:focus,.fld textarea:focus,.fld select:focus{border-color:var(--acc)}
+.fld textarea{resize:vertical;min-height:92px}
+.fld.err input,.fld.err textarea{border-color:var(--red)}
+.ok{border:1px solid var(--acc);padding:20px;display:none}
+.ok.on{display:block;animation:pop .5s var(--e)}
+@keyframes pop{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* ---------- PIED ---------- */
+footer{border-top:1px solid var(--ink);padding:26px clamp(18px,4vw,54px);display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:center}
+.kbd{font-family:var(--mono);font-size:9px;border:1px solid var(--thin);padding:2px 5px;color:var(--mut)}
+</style>
+</head>
+<body class="l-grid l-dim l-photo l-annot l-cross">
+
+<div id="grid"><div class="fine"></div><div class="coarse"></div></div>
+<div class="ruler" id="rtop"><i class="rmark" id="mx"></i></div>
+<div class="ruler" id="rleft"><i class="rmark" id="my"></i></div>
+<div id="cross"><i class="h"></i><i class="v"></i></div>
+
+<header>
+  <div class="nav">
+    <a href="#a01" class="brand"><i></i>[VOTRE NOM] · Assistant architecte</a>
+    <nav class="nlinks">
+      <a href="#a02" data-nav>A-02 Diagnostic</a>
+      <a href="#a03" data-nav>A-03 Nomenclature</a>
+      <a href="#a04" data-nav>A-04 Bordereau</a>
+      <a href="#a05" data-nav>A-05 Procédure</a>
+      <a href="#a06" data-nav>A-06 Note</a>
+      <a href="#a08" data-nav>A-08 Contact</a>
+    </nav>
+    <div style="display:flex;gap:6px">
+      <button class="tool" id="modeBtn">Mode bleu</button>
+      <a href="#a08" class="tool">Demander un devis</a>
+    </div>
+  </div>
+</header>
+
+<!-- PANNEAU CALQUES -->
+<aside id="layers">
+  <div class="lh"><span class="mono">Calques</span><span class="mono" id="lmin">—</span></div>
+  <div class="lb">
+    <div class="lrow on" data-l="l-grid">   <span class="bx"></span>Grille<span class="kk">G</span></div>
+    <div class="lrow on" data-l="l-dim">    <span class="bx"></span>Cotes<span class="kk">C</span></div>
+    <div class="lrow on" data-l="l-annot">  <span class="bx"></span>Annotations<span class="kk">A</span></div>
+    <div class="lrow on" data-l="l-photo">  <span class="bx"></span>Photos<span class="kk">P</span></div>
+    <div class="lrow on" data-l="l-cross">  <span class="bx"></span>Réticule<span class="kk">R</span></div>
+    <div class="lrow" data-l="l-hatch">     <span class="bx"></span>Hachures<span class="kk">H</span></div>
+  </div>
+</aside>
+
+<!-- CARTOUCHE -->
+<aside id="cart">
+  <div class="ch"><span>Cartouche</span><span id="cmin">—</span></div>
+  <dl>
+    <div class="crow"><dt>Projet</dt><dd>Assistance d'architecture</dd></div>
+    <div class="crow"><dt>Émetteur</dt><dd>[Votre nom]</dd></div>
+    <div class="crow"><dt>Planche</dt><dd id="cSheet">A-01 · Page de garde</dd></div>
+    <div class="crow"><dt>Échelle</dt><dd>1:1 — remote</dd></div>
+    <div class="crow"><dt>Date</dt><dd id="cDate">--/--/----</dd></div>
+    <div class="crow"><dt>Indice</dt><dd>B — proposition 02</dd></div>
+    <div class="crow"><dt>Curseur</dt><dd id="cXY">X 0000 · Y 0000</dd></div>
+  </dl>
+</aside>
+
+<main class="sheet">
+
+<!-- ============ A-01 ============ -->
+<section id="a01" data-sheet="A-01 · Page de garde">
+  <div class="pad cover">
+    <div>
+      <div class="tiny-tbl rv">
+        <div>Planche <b>A-01</b></div><div>Indice <b>B</b></div><div>Disponible <b>[2] postes</b></div>
+      </div>
+      <h1 class="rv">Les architectes ne manquent pas de talent.<br><span class="acc">Ils manquent de temps.</span></h1>
+      <div class="dim" style="max-width:420px"><span>Constat relevé sur site</span></div>
+      <p class="lead rv">Croquis en retard, dossiers qui s'empilent, journées avalées par les tâches annexes. Je prends en charge la production qui vous ralentit — vous gardez la conception, la signature et le client.</p>
+      <div class="rv" style="display:flex;gap:10px;margin-top:26px;flex-wrap:wrap">
+        <a href="#a08" class="btn pri"><span>Réserver 20 minutes</span></a>
+        <a href="#a04" class="btn"><span>Chiffrer mon besoin</span></a>
+      </div>
+      <div class="note rv" style="margin-top:26px">Survolez la planche : réticule, calques et cotes sont actifs</div>
+    </div>
+
+    <div class="axo rv">
+      <svg viewBox="0 0 560 430" fill="none" stroke="currentColor" stroke-width="1.1" aria-label="Maquette axonométrique">
+        <!-- socle -->
+        <polygon class="draw" points="280,400 110,305 280,210 450,305" stroke="var(--thin)" style="animation-delay:.1s"/>
+        <!-- volume 1 -->
+        <polygon class="draw" points="280,330 140,250 280,170 420,250" stroke="currentColor" style="animation-delay:.3s"/>
+        <path class="draw" d="M140 250v42l140 80 140-80v-42" stroke="currentColor" style="animation-delay:.5s"/>
+        <!-- volume 2 -->
+        <polygon class="draw" points="280,250 170,186 280,122 390,186" stroke="currentColor" style="animation-delay:.75s"/>
+        <path class="draw" d="M170 186v34l110 64 110-64v-34" stroke="currentColor" style="animation-delay:.95s"/>
+        <!-- volume 3 -->
+        <polygon class="draw" points="280,178 205,134 280,90 355,134" stroke="var(--acc)" stroke-width="1.4" style="animation-delay:1.2s"/>
+        <path class="draw" d="M205 134v26l75 44 75-44v-26" stroke="var(--acc)" stroke-width="1.4" style="animation-delay:1.4s"/>
+        <!-- axes de cote -->
+        <path class="draw" d="M494 305V120" stroke="var(--acc)" stroke-dasharray="4 4" style="animation-delay:1.6s"/>
+        <path class="draw" d="M487 305h14M487 120h14" stroke="var(--acc)" style="animation-delay:1.7s"/>
+        <path class="draw" d="M110 332l170 96 170-96" stroke="var(--acc)" stroke-dasharray="4 4" style="animation-delay:1.8s"/>
+      </svg>
+      <span class="lead-note" style="right:-6px;top:46%">+12 h / semaine</span>
+      <span class="lead-note" style="left:34%;bottom:-6px">périmètre délégué</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ A-02 ============ -->
+<section id="a02" data-sheet="A-02 · Diagnostic">
+  <div class="shead"><span class="ref">A-02 — Diagnostic</span><span class="mono">Relevé auprès des cabinets</span></div>
+  <div class="pad">
+    <h2 class="rv" style="max-width:16ch">Trop de projets. Pas assez d'heures.</h2>
+    <div class="dim" style="max-width:560px"><span>Trois symptômes récurrents</span></div>
+  </div>
+  <div class="diag">
+    <div class="dcell rv hatch-host">
+      <div class="pc"><span data-count="60">0</span><sup>%</sup></div>
+      <div class="gauge" data-fill="60"><i></i></div>
+      <h3>Les tâches annexes mangent la journée</h3>
+      <p>Mises au net, nomenclatures, relances, comptes-rendus. Rien ne demande votre signature — tout prend vos heures.</p>
+    </div>
+    <div class="dcell rv hatch-host">
+      <div class="pc"><span data-count="1">0</span><sup>FTE</sup></div>
+      <div class="gauge" data-fill="35"><i></i></div>
+      <h3>Embaucher est trop lourd, refuser trop cher</h3>
+      <p>Un poste à temps plein ne se justifie pas sur une charge irrégulière. Alors on accepte le projet de trop — ou on laisse filer la commande.</p>
+    </div>
+    <div class="dcell rv hatch-host">
+      <div class="pc"><span data-count="100">0</span><sup>%</sup></div>
+      <div class="gauge" data-fill="100"><i></i></div>
+      <h3>La qualité paie l'addition</h3>
+      <p>Délais serrés, livrables bâclés, relation client négligée. L'épuisement s'installe et la créativité s'éteint en silence.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ A-03 ============ -->
+<section id="a03" data-sheet="A-03 · Nomenclature">
+  <div class="shead"><span class="ref">A-03 — Nomenclature des prestations</span><span class="mono">05 postes · cliquez pour déplier</span></div>
+  <div class="pad" style="padding-bottom:18px">
+    <h2 class="rv" style="max-width:18ch">Vous gardez la vision. Je gère l'exécution.</h2>
+  </div>
+  <div class="tbl-head"><span>Réf.</span><span>Désignation</span><span class="hd3">Outils</span><span class="hd4">Délai type</span><span></span></div>
+
+  <div class="nitem">
+    <div class="nrow"><span class="c1">P-01</span><span class="c2">Production graphique</span><span class="c3">AutoCAD · ArchiCAD</span><span class="c4">48 h</span><span class="c5"></span></div>
+    <div class="npanel"><div><div class="nin">
+      <span></span>
+      <div><p>Mise au net de plans, coupes, façades et détails. Je travaille dans vos gabarits, vos calques et vos standards — le livrable s'intègre au dossier sans retouche.</p>
+        <ul><li>Plans, coupes, façades, détails</li><li>Mise à l'échelle et habillage</li><li>Carnets de documents harmonisés</li><li>Reprise de fonds de plan existants</li></ul></div>
+      <div class="shot"><img src="data:image/jpeg;base64,__IMG1__" alt="Plans techniques"></div>
+    </div></div></div>
+  </div>
+
+  <div class="nitem">
+    <div class="nrow"><span class="c1">P-02</span><span class="c2">Modélisation 3D &amp; BIM</span><span class="c3">Revit · SketchUp</span><span class="c4">3–5 j</span><span class="c5"></span></div>
+    <div class="npanel"><div><div class="nin">
+      <span></span>
+      <div><p>Maquettes numériques exploitables, modélisation volumétrique et mise à jour de modèles existants. Un fichier propre, structuré, documenté.</p>
+        <ul><li>Modélisation volumétrique et BIM</li><li>Mise à jour de modèles existants</li><li>Extraction de vues et de coupes</li><li>Nomenclatures liées au modèle</li></ul></div>
+      <div class="shot"><img src="data:image/jpeg;base64,__IMG2__" alt="Maquette volumétrique"></div>
+    </div></div></div>
+  </div>
+
+  <div class="nitem">
+    <div class="nrow"><span class="c1">P-03</span><span class="c2">Dossiers &amp; pièces écrites</span><span class="c3">Permis · CCTP</span><span class="c4">5 j</span><span class="c5"></span></div>
+    <div class="npanel"><div><div class="nin">
+      <span></span>
+      <div><p>Montage complet des dossiers et rédaction des pièces écrites, prêts à déposer. Vous relisez, vous signez.</p>
+        <ul><li>Dossiers de permis de construire</li><li>Notices descriptives et CCTP</li><li>Nomenclatures et quantitatifs</li><li>Pièces annexes et bordereaux</li></ul></div>
+      <div class="shot"><img src="data:image/jpeg;base64,__IMG3__" alt="Dossiers imprimés"></div>
+    </div></div></div>
+  </div>
+
+  <div class="nitem">
+    <div class="nrow"><span class="c1">P-04</span><span class="c2">Suivi de projet</span><span class="c3">Planning · CR</span><span class="c4">Continu</span><span class="c5"></span></div>
+    <div class="npanel"><div><div class="nin">
+      <span></span>
+      <div><p>Je tiens le planning et la mémoire du projet : qui doit quoi, pour quand. Vous arrivez en réunion avec un dossier à jour.</p>
+        <ul><li>Planning et jalons</li><li>Relances BET, fournisseurs, entreprises</li><li>Comptes-rendus de réunion</li><li>Tableau de bord d'avancement</li></ul></div>
+      <div class="shot"><img src="data:image/jpeg;base64,__IMG4__" alt="Chantier en cours"></div>
+    </div></div></div>
+  </div>
+
+  <div class="nitem">
+    <div class="nrow"><span class="c1">P-05</span><span class="c2">Rendus &amp; présentations</span><span class="c3">InDesign · Lumion</span><span class="c4">3 j</span><span class="c5"></span></div>
+    <div class="npanel"><div><div class="nin">
+      <span></span>
+      <div><p>Des documents qui vendent le projet avant la réunion : planches de concours, books et images d'ambiance mis en page au cordeau.</p>
+        <ul><li>Planches de concours</li><li>Books projets et portfolios</li><li>Images d'ambiance et diagrammes</li><li>Mise en page client soignée</li></ul></div>
+      <div class="shot"><img src="data:image/jpeg;base64,__IMG5__" alt="Planches de présentation"></div>
+    </div></div></div>
+  </div>
+</section>
+
+<!-- ============ A-04 ============ -->
+<section id="a04" data-sheet="A-04 · Bordereau">
+  <div class="shead"><span class="ref">A-04 — Bordereau d'estimation</span><span class="mono">Composez votre lot</span></div>
+  <div class="pad bord">
+    <div>
+      <h2 class="rv" style="max-width:18ch">Chiffrez votre lot en direct.</h2>
+      <div class="dim" style="max-width:420px"><span>Estimation indicative</span></div>
+      <div class="rate rv">
+        <span class="mono">Taux horaire</span>
+        <strong style="font-family:var(--mono);font-size:13px"><span id="rv">25</span> <span class="cu">€</span>/h</strong>
+        <input type="range" id="rate" min="10" max="60" step="1" value="25">
+        <span class="switch"><button class="on" data-cur="EUR">EUR</button><button data-cur="XOF">FCFA</button></span>
+      </div>
+
+      <div id="bord">
+        <div class="brow" data-u="h"><div><span class="bn">P-01 Production graphique</span><span class="bu">heures / mois</span></div>
+          <div class="step"><button data-d="-1">−</button><span class="q">0</span><button data-d="1">+</button></div><div class="bsum">—</div></div>
+        <div class="brow" data-u="h"><div><span class="bn">P-02 Modélisation 3D &amp; BIM</span><span class="bu">heures / mois</span></div>
+          <div class="step"><button data-d="-1">−</button><span class="q">0</span><button data-d="1">+</button></div><div class="bsum">—</div></div>
+        <div class="brow" data-u="h"><div><span class="bn">P-03 Dossiers &amp; pièces écrites</span><span class="bu">heures / mois</span></div>
+          <div class="step"><button data-d="-1">−</button><span class="q">0</span><button data-d="1">+</button></div><div class="bsum">—</div></div>
+        <div class="brow" data-u="h"><div><span class="bn">P-04 Suivi de projet</span><span class="bu">heures / mois</span></div>
+          <div class="step"><button data-d="-1">−</button><span class="q">0</span><button data-d="1">+</button></div><div class="bsum">—</div></div>
+        <div class="brow" data-u="h"><div><span class="bn">P-05 Rendus &amp; présentations</span><span class="bu">heures / mois</span></div>
+          <div class="step"><button data-d="-1">−</button><span class="q">0</span><button data-d="1">+</button></div><div class="bsum">—</div></div>
+      </div>
+      <div class="note" style="margin-top:18px">Pas de minimum : on peut démarrer sur un seul poste, un seul mois.</div>
+    </div>
+
+    <div class="total">
+      <div class="tc"><span class="mono">Volume mensuel</span><div class="tv" style="margin-top:8px"><span id="th">0</span><sup>H</sup></div></div>
+      <div class="tc"><span class="mono">Budget mensuel</span><div class="tv" style="margin-top:8px"><span id="tm">0</span><sup class="cu">€</sup></div></div>
+      <div class="tc"><span class="mono">Soit par an</span><div class="tv" style="font-size:clamp(1.2rem,2.4vw,1.7rem);margin-top:8px"><span id="ty">0</span><sup class="cu">€</sup></div>
+        <p style="margin-top:10px">Face à un poste salarié équivalent : ni charges, ni congés, ni engagement de durée.</p></div>
+      <div class="tc" style="display:grid;gap:9px">
+        <button class="btn pri" id="sendB" style="justify-content:center"><span>Envoyer ce bordereau</span></button>
+        <button class="btn" id="copyB" style="justify-content:center"><span>Copier le récapitulatif</span></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ A-05 ============ -->
+<section id="a05" data-sheet="A-05 · Procédure">
+  <div class="shead"><span class="ref">A-05 — Procédure d'exécution</span><span class="mono">4 phases</span></div>
+  <div class="pad">
+    <div class="proc">
+      <div class="spine"><i id="spine"></i></div>
+      <div class="pstep rv"><div class="pn">Phase 01 — Relevé</div><h3>On fait le tri</h3><p>20 minutes d'appel pour identifier ce qui vous prend du temps sans vous en rapporter. Je repars avec une liste, vous repartez avec un plan.</p></div>
+      <div class="pstep rv"><div class="pn">Phase 02 — Cadrage</div><h3>On fixe le périmètre</h3><p>Délais, outils, format de collaboration et tarif arrêtés à l'avance. Aucune zone grise, aucun dépassement sans accord écrit.</p></div>
+      <div class="pstep rv"><div class="pn">Phase 03 — Essai</div><h3>On teste sur un lot</h3><p>Un premier poste limité avant tout engagement large. Si le résultat ne vous convainc pas, on s'arrête là, sans justification.</p></div>
+      <div class="pstep rv"><div class="pn">Phase 04 — Exécution</div><h3>Vous récupérez vos heures</h3><p>Je travaille dans vos standards et vos gabarits. Point d'avancement régulier, livrables prêts à l'emploi, aucune surprise.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ A-06 ============ -->
+<section id="a06" data-sheet="A-06 · Note d'intention">
+  <div class="shead"><span class="ref">A-06 — Note d'intention</span><span class="mono">Pourquoi ce métier</span></div>
+  <div class="pad intent">
+    <div>
+      <q class="rv">Un architecte devrait passer ses journées à concevoir, <em>pas à classer des fichiers.</em></q>
+      <div class="dim" style="max-width:400px"><span>Ligne directrice</span></div>
+      <p class="lead rv">Ma mission est simple : vous rendre votre ressource la plus rare. Du temps à réinvestir dans la création, la relation client et le développement de votre cabinet.</p>
+      <div class="rv" style="margin-top:24px"><div style="font-size:17px;font-weight:600">[Votre nom]</div><div class="mono" style="margin-top:3px">Assistant architecte — depuis [20XX]</div></div>
+    </div>
+    <div class="stamp rv">Bon pour exécution<br>Indice B · [Votre nom]</div>
+  </div>
+</section>
+
+<!-- ============ A-07 ============ -->
+<section id="a07" data-sheet="A-07 · Réserves">
+  <div class="shead"><span class="ref">A-07 — Questions &amp; réserves</span><span class="mono">Avant de se parler</span></div>
+  <div class="qa">
+    <div class="qitem open"><button class="qh"><span class="qn">Q-01</span><span>Travaillez-vous à distance ?</span><span class="qp">+</span></button><div class="qbody"><div><p>Oui, à 100 %. J'interviens sur vos outils et vos gabarits, avec des points d'avancement réguliers. Un déplacement ponctuel reste possible selon le projet.</p></div></div></div>
+    <div class="qitem"><button class="qh"><span class="qn">Q-02</span><span>Quels logiciels maîtrisez-vous ?</span><span class="qp">+</span></button><div class="qbody"><div><p>[AutoCAD, ArchiCAD, Revit, SketchUp, Lumion, Photoshop, InDesign, Suite Office…] — à compléter avec vos outils réels.</p></div></div></div>
+    <div class="qitem"><button class="qh"><span class="qn">Q-03</span><span>Comment facturez-vous ?</span><span class="qp">+</span></button><div class="qbody"><div><p>Trois formules : à l'heure, au forfait projet, ou en abonnement mensuel d'un volume d'heures réservé. Le tarif est annoncé avant de commencer — jamais de dépassement sans votre accord écrit.</p></div></div></div>
+    <div class="qitem"><button class="qh"><span class="qn">Q-04</span><span>Et si je ne veux tester que sur un petit lot ?</span><span class="qp">+</span></button><div class="qbody"><div><p>C'est exactement ce que je recommande. On démarre sur une tâche limitée. Si le résultat ne vous convainc pas, on s'arrête là, sans justification.</p></div></div></div>
+    <div class="qitem"><button class="qh"><span class="qn">Q-05</span><span>Signez-vous un accord de confidentialité ?</span><span class="qp">+</span></button><div class="qbody"><div><p>Systématiquement si vous le souhaitez. Vos plans, vos clients et vos méthodes ne quittent jamais le cadre de notre collaboration.</p></div></div></div>
+  </div>
+</section>
+
+<!-- ============ A-08 ============ -->
+<section id="a08" data-sheet="A-08 · Transmission">
+  <div class="shead"><span class="ref">A-08 — Transmission</span><span class="mono">Réponse sous 24 h ouvrées</span></div>
+  <div class="pad tx">
+    <div>
+      <h2 class="rv" style="max-width:16ch">Dites-moi ce qui vous prend du temps.</h2>
+      <div class="dim" style="max-width:380px"><span>20 minutes suffisent</span></div>
+      <div class="clist rv" style="margin-top:10px">
+        <a href="mailto:[votre@email.com]">[votre@email.com]<span>↗</span></a>
+        <a href="tel:+22900000000">[+229 00 00 00 00]<span>↗</span></a>
+        <a href="#">LinkedIn — [votre profil]<span>↗</span></a>
+        <a href="#">Créneau direct — [lien Calendly]<span>↗</span></a>
+      </div>
+    </div>
+    <div>
+      <form id="form" novalidate>
+        <div class="frow">
+          <div class="fld"><label for="f1">Nom *</label><input id="f1" type="text"></div>
+          <div class="fld"><label for="f2">Cabinet</label><input id="f2" type="text"></div>
+        </div>
+        <div class="fld"><label for="f3">Email *</label><input id="f3" type="email"></div>
+        <div class="fld"><label for="f5">Message / bordereau</label><textarea id="f5"></textarea></div>
+        <button type="submit" class="btn pri" style="justify-content:center"><span>Transmettre la demande</span></button>
+        <p class="mono" id="fnote">Démo — à brancher sur Formspree / Tally à la mise en ligne</p>
+      </form>
+      <div class="ok" id="ok"><div class="mono acc">Demande transmise</div><p style="margin-top:7px">Merci <span id="okname"></span>. Réponse sous 24 h ouvrées avec un créneau et une première estimation.</p></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span class="mono">© <span id="yr">2026</span> [Votre nom] — Assistant architecte</span>
+  <span class="mono">Raccourcis <span class="kbd">G</span> <span class="kbd">C</span> <span class="kbd">A</span> <span class="kbd">P</span> <span class="kbd">R</span> <span class="kbd">H</span> calques · <span class="kbd">B</span> mode bleu</span>
+  <a href="#a01" class="mono">Retour planche A-01 ↑</a>
+</footer>
+</main>
+
+<div class="toast" id="toast">Récapitulatif copié</div>
+
+<script>
+(function(){
+  var RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var body=document.body, root=document.documentElement;
+
+  /* ---------- RÉVÉLATIONS ---------- */
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){
+      if(!e.isIntersecting) return;
+      e.target.classList.add('in');
+      var g=e.target.querySelector?e.target.querySelector('.gauge'):null;
+      if(g) g.querySelector('i').style.width=g.getAttribute('data-fill')+'%';
+      io.unobserve(e.target);
+    });
+  },{threshold:.2,rootMargin:'0px 0px -6% 0px'});
+  document.querySelectorAll('.rv,.dim,.pstep').forEach(function(el,i){
+    if(el.classList.contains('rv')) el.style.transitionDelay=Math.min((i%5)*70,280)+'ms';
+    io.observe(el);
+  });
+
+  /* ---------- COMPTEURS ---------- */
+  var cio=new IntersectionObserver(function(es){
+    es.forEach(function(en){
+      if(!en.isIntersecting) return;
+      var el=en.target,to=+el.getAttribute('data-count'),t0=null;
+      requestAnimationFrame(function s(ts){ if(!t0)t0=ts; var k=Math.min((ts-t0)/1300,1);
+        el.textContent=Math.round(to*(1-Math.pow(1-k,3))); if(k<1)requestAnimationFrame(s); });
+      cio.unobserve(el);
+    });
+  },{threshold:.6});
+  document.querySelectorAll('[data-count]').forEach(function(e){cio.observe(e)});
+
+  /* ---------- RÉTICULE + RÈGLES + CARTOUCHE XY ---------- */
+  var ch=document.querySelector('#cross .h'), cv=document.querySelector('#cross .v'),
+      mx=document.getElementById('mx'), my=document.getElementById('my'), cxy=document.getElementById('cXY');
+  var tX=0,tY=0,X=0,Y=0,moved=false;
+  addEventListener('mousemove',function(e){ tX=e.clientX; tY=e.clientY; moved=true; });
+  (function loop(){
+    X+=(tX-X)*.25; Y+=(tY-Y)*.25;
+    if(moved){
+      ch.style.transform='translateY('+Y+'px)'; cv.style.transform='translateX('+X+'px)';
+      mx.style.transform='translateX('+X+'px)'; my.style.transform='translateY('+Y+'px)';
+      cxy.textContent='X '+String(Math.round(X)).padStart(4,'0')+' · Y '+String(Math.round(Y+scrollY)).padStart(4,'0');
+    }
+    requestAnimationFrame(loop);
+  })();
+
+  /* ---------- CALQUES ---------- */
+  var keymap={g:'l-grid',c:'l-dim',a:'l-annot',p:'l-photo',r:'l-cross',h:'l-hatch'};
+  function setLayer(cls,on){
+    body.classList.toggle(cls,on);
+    var row=document.querySelector('.lrow[data-l="'+cls+'"]'); if(row) row.classList.toggle('on',on);
+    try{localStorage.setItem(cls,on?'1':'0')}catch(e){}
+  }
+  document.querySelectorAll('.lrow').forEach(function(r){
+    r.addEventListener('click',function(){ var c=r.getAttribute('data-l'); setLayer(c,!body.classList.contains(c)); });
+  });
+  try{ Object.keys(keymap).forEach(function(k){ var c=keymap[k],v=localStorage.getItem(c); if(v!==null) setLayer(c,v==='1'); }); }catch(e){}
+  document.getElementById('layers').querySelector('.lh').addEventListener('click',function(){ document.getElementById('layers').classList.toggle('min'); });
+  document.querySelector('#cart .ch').addEventListener('click',function(){ document.getElementById('cart').classList.toggle('min'); });
+
+  /* ---------- MODE PAPIER / BLEU ---------- */
+  var mb=document.getElementById('modeBtn');
+  function setMode(m){ root.setAttribute('data-mode',m); mb.textContent = m==='blue'?'Mode papier':'Mode bleu'; mb.classList.toggle('on',m==='blue'); try{localStorage.setItem('mode',m)}catch(e){} }
+  try{ var sm=localStorage.getItem('mode'); if(sm) setMode(sm); }catch(e){}
+  mb.addEventListener('click',function(){ setMode(root.getAttribute('data-mode')==='blue'?'paper':'blue'); });
+
+  addEventListener('keydown',function(e){
+    if(/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
+    var k=e.key.toLowerCase();
+    if(keymap[k]){ setLayer(keymap[k],!body.classList.contains(keymap[k])); }
+    if(k==='b'){ setMode(root.getAttribute('data-mode')==='blue'?'paper':'blue'); }
+  });
+
+  /* ---------- ACCORDÉONS ---------- */
+  document.querySelectorAll('.nrow').forEach(function(r){ r.addEventListener('click',function(){ r.parentElement.classList.toggle('open'); }); });
+  document.querySelectorAll('.qh').forEach(function(h){ h.addEventListener('click',function(){
+    var it=h.parentElement, o=it.classList.toggle('open'); h.querySelector('.qp').textContent=o?'−':'+'; }); });
+  document.querySelector('.qitem.open .qp').textContent='−';
+
+  /* ---------- BORDEREAU ---------- */
+  var RATE=655.957, curr='EUR', rate=25;
+  function fmt(n){ return Math.round(n).toLocaleString('fr-FR').replace(/\u202f|\u00a0/g,' '); }
+  function sym(){ return curr==='EUR'?'€':'F'; }
+  function recap(){
+    var out=[], th=0;
+    document.querySelectorAll('.brow').forEach(function(r){
+      var q=+r.querySelector('.q').textContent;
+      if(q>0){ out.push('• '+r.querySelector('.bn').textContent+' — '+q+' h/mois'); th+=q; }
+    });
+    if(!out.length) return null;
+    var m=th*rate*(curr==='EUR'?1:RATE);
+    return 'Bordereau estimatif\n'+out.join('\n')+'\nTotal : '+th+' h/mois — '+fmt(m)+' '+sym()+'/mois ('+fmt(m*12)+' '+sym()+'/an, base '+(curr==='EUR'?rate:fmt(rate*RATE))+' '+sym()+'/h).';
+  }
+  function calc(){
+    var th=0;
+    document.querySelectorAll('.brow').forEach(function(r){
+      var q=+r.querySelector('.q').textContent; th+=q;
+      r.classList.toggle('act',q>0);
+      r.querySelector('.bsum').textContent = q? fmt(q*rate*(curr==='EUR'?1:RATE))+' '+sym() : '—';
+    });
+    var m=th*rate*(curr==='EUR'?1:RATE);
+    document.getElementById('th').textContent=th;
+    document.getElementById('tm').textContent=fmt(m);
+    document.getElementById('ty').textContent=fmt(m*12);
+    document.getElementById('rv').textContent= curr==='EUR'?rate:fmt(rate*RATE);
+    document.querySelectorAll('.cu').forEach(function(e){e.textContent=sym()});
+  }
+  document.querySelectorAll('.step button').forEach(function(b){
+    b.addEventListener('click',function(){
+      var q=b.parentElement.querySelector('.q'), v=+q.textContent + (+b.getAttribute('data-d'))*5;
+      q.textContent=Math.max(0,Math.min(80,v)); calc();
+    });
+  });
+  document.getElementById('rate').addEventListener('input',function(){ rate=+this.value; calc(); });
+  document.querySelectorAll('.switch button').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('.switch button').forEach(function(x){x.classList.remove('on')});
+      b.classList.add('on'); curr=b.getAttribute('data-cur'); calc();
+    });
+  });
+  calc();
+
+  var toast=document.getElementById('toast');
+  function flash(t){ toast.textContent=t; toast.classList.add('on'); setTimeout(function(){toast.classList.remove('on')},2200); }
+  document.getElementById('copyB').addEventListener('click',function(){
+    var r=recap(); if(!r){ flash('Sélectionnez au moins un poste'); return; }
+    if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(r).then(function(){flash('Récapitulatif copié')},function(){flash('Copie indisponible ici')}); }
+    else flash('Copie indisponible ici');
+  });
+  document.getElementById('sendB').addEventListener('click',function(){
+    var r=recap(); if(!r){ flash('Sélectionnez au moins un poste'); return; }
+    document.getElementById('f5').value=r;
+    document.getElementById('a08').scrollIntoView({behavior:RM?'auto':'smooth'});
+    setTimeout(function(){document.getElementById('f1').focus()},700);
+    flash('Bordereau reporté dans le formulaire');
+  });
+
+  /* ---------- SCROLL : cartouche, nav, épine dorsale ---------- */
+  var secs=document.querySelectorAll('section[data-sheet]'), cSheet=document.getElementById('cSheet'),
+      spine=document.getElementById('spine'), proc=document.querySelector('.proc');
+  function onScroll(){
+    var ci=0;
+    secs.forEach(function(s,i){ if(s.getBoundingClientRect().top<innerHeight*.4) ci=i; });
+    cSheet.textContent=secs[ci].getAttribute('data-sheet');
+    document.querySelectorAll('[data-nav]').forEach(function(a){ a.classList.toggle('act', a.getAttribute('href')==='#'+secs[ci].id); });
+    if(proc){
+      var r=proc.getBoundingClientRect(), k=(innerHeight*.75-r.top)/r.height;
+      spine.style.height=Math.max(0,Math.min(1,k))*100+'%';
+    }
+  }
+  addEventListener('scroll',onScroll,{passive:true}); onScroll();
+
+  /* ---------- DATE ---------- */
+  var d=new Date();
+  document.getElementById('cDate').textContent=('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear();
+  document.getElementById('yr').textContent=d.getFullYear();
+
+  /* ---------- FORMULAIRE ---------- */
+  var form=document.getElementById('form');
+  form.addEventListener('submit',function(e){
+    e.preventDefault(); var ok=true;
+    [['f1',function(v){return v.trim().length>1}],['f3',function(v){return /.+@.+\..+/.test(v)}]].forEach(function(p){
+      var el=document.getElementById(p[0]);
+      el.parentElement.classList.toggle('err',!p[1](el.value));
+      if(!p[1](el.value)) ok=false;
+    });
+    if(!ok){ document.getElementById('fnote').textContent='Vérifiez le nom et l\'email.'; return; }
+    document.getElementById('okname').textContent=document.getElementById('f1').value.split(' ')[0];
+    form.style.display='none'; document.getElementById('ok').classList.add('on');
+  });
+})();
+</script>
+</body>
+</html>

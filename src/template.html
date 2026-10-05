@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>[VOTRE NOM] — Assistant architecte</title>
+<meta name="description" content="Assistant architecte indépendant. Je prends en charge les tâches qui ralentissent les cabinets d'architecture pour leur rendre leur ressource la plus rare : le temps.">
+<style>
+:root{
+  --bg:#FFFFFF; --fg:#0A0A0A; --mut:#8A8A8A; --line:#E4E4E4; --soft:#F4F3F1;
+  --acc:#E8341C;
+  --sans:'Helvetica Neue',Helvetica,Inter,Arial,sans-serif;
+  --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  --ease:cubic-bezier(.19,1,.22,1);
+}
+html[data-theme="dark"]{
+  --bg:#0A0A0A; --fg:#F2F1EF; --mut:#7C7C7C; --line:#222120; --soft:#131211;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px;-webkit-text-size-adjust:100%}
+body{
+  background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+  transition:background .5s var(--ease),color .5s var(--ease);
+}
+body.lock{overflow:hidden}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+::selection{background:var(--acc);color:#fff}
+
+.wrap{width:100%;padding:0 28px}
+@media(max-width:700px){.wrap{padding:0 16px}}
+
+.mono{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+.hl{color:var(--acc)}
+
+h1,h2,h3{font-weight:500;letter-spacing:-.035em;line-height:.95;text-transform:uppercase}
+.display{font-size:clamp(2.6rem,8.6vw,8.2rem)}
+.big{font-size:clamp(2rem,5.6vw,5rem)}
+.med{font-size:clamp(1.5rem,3vw,2.6rem)}
+p{color:var(--mut);font-size:15px;line-height:1.55}
+.lead{color:var(--fg);font-size:clamp(15px,1.35vw,19px);line-height:1.5;max-width:52ch;letter-spacing:-.01em}
+
+/* ---------- LOADER ---------- */
+#loader{position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;align-items:flex-end;justify-content:space-between;padding:28px;transition:transform 1s var(--ease)}
+body.loaded #loader{transform:translateY(-101%)}
+#loader .cnt{font-size:clamp(4rem,16vw,14rem);font-weight:500;letter-spacing:-.05em;line-height:.8}
+#loader .bar{position:absolute;left:0;bottom:0;height:2px;background:var(--acc);width:0%}
+
+/* ---------- CURSOR ---------- */
+#cur,#curdot{position:fixed;top:0;left:0;z-index:900;pointer-events:none;border-radius:50%;mix-blend-mode:difference}
+#cur{width:34px;height:34px;border:1px solid #fff;margin:-17px 0 0 -17px;transition:width .3s var(--ease),height .3s var(--ease),margin .3s var(--ease),opacity .3s,background .3s}
+#curdot{width:5px;height:5px;background:#fff;margin:-2.5px 0 0 -2.5px}
+#cur.grow{width:76px;height:76px;margin:-38px 0 0 -38px;background:rgba(255,255,255,.1)}
+#cur .lab{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:#fff;opacity:0;transition:opacity .25s}
+#cur.grow .lab{opacity:1}
+@media(hover:hover) and (pointer:fine){body{cursor:none}a,button,input,select,textarea,label,summary,[data-cursor]{cursor:none}}
+@media(hover:none),(pointer:coarse){#cur,#curdot{display:none}}
+
+/* ---------- HOVER PREVIEW ---------- */
+#prev{position:fixed;z-index:880;width:clamp(200px,22vw,320px);aspect-ratio:4/3;pointer-events:none;opacity:0;overflow:hidden;transform:translate(-50%,-50%) scale(.92);transition:opacity .4s var(--ease),transform .5s var(--ease)}
+#prev.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#prev img{width:100%;height:100%;object-fit:cover}
+@media(max-width:900px){#prev{display:none}}
+
+/* ---------- PROGRESS + COUNTER ---------- */
+#prog{position:fixed;top:0;left:0;height:2px;background:var(--acc);z-index:850;width:0}
+#secm{position:fixed;left:28px;bottom:22px;z-index:840;display:flex;gap:10px;align-items:center;mix-blend-mode:difference;color:#fff}
+#secm .n{font-family:var(--mono);font-size:10px;letter-spacing:.12em}
+@media(max-width:700px){#secm{left:16px;bottom:14px}}
+
+/* ---------- HEADER ---------- */
+header{position:fixed;top:0;left:0;right:0;z-index:860;border-bottom:1px solid transparent;transition:background .4s var(--ease),border-color .4s}
+header.solid{background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(14px);border-color:var(--line)}
+.nav{display:flex;align-items:center;justify-content:space-between;height:58px;gap:18px}
+.brand{font-size:14px;font-weight:500;letter-spacing:-.02em;text-transform:uppercase;display:flex;align-items:center;gap:9px}
+.brand .sq{width:9px;height:9px;background:var(--acc);display:block;animation:pulse 2.6s infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.6);opacity:.5}}
+.nlinks{display:flex;gap:22px}
+.nlinks a{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;position:relative;padding:3px 0;color:var(--mut);transition:color .25s}
+.nlinks a:hover,.nlinks a.act{color:var(--fg)}
+.nlinks a::after{content:"";position:absolute;left:0;bottom:0;height:1px;width:0;background:var(--acc);transition:width .3s var(--ease)}
+.nlinks a:hover::after,.nlinks a.act::after{width:100%}
+@media(max-width:980px){.nlinks{display:none}}
+.ntools{display:flex;gap:8px;align-items:center}
+.kbtn{display:flex;align-items:center;gap:8px;border:1px solid var(--line);padding:6px 10px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);background:transparent;transition:border-color .25s,color .25s}
+.kbtn:hover{border-color:var(--fg);color:var(--fg)}
+.kbtn kbd{font-family:var(--mono);border:1px solid var(--line);padding:1px 4px;font-size:9px}
+#clock{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--mut)}
+@media(max-width:760px){#clock,.kbtn .txt{display:none}}
+
+/* ---------- SECTION FRAME ---------- */
+section{position:relative;border-top:1px solid var(--line)}
+.shead{display:flex;justify-content:space-between;align-items:baseline;padding:16px 0;border-bottom:1px solid var(--line)}
+.pad{padding:64px 0}
+@media(max-width:700px){.pad{padding:44px 0}}
+
+/* ---------- SPLIT TEXT ---------- */
+.sp{display:inline-block;overflow:hidden;vertical-align:top}
+.sp i{display:inline-block;font-style:inherit;transform:translateY(105%);transition:transform .9s var(--ease)}
+.in .sp i{transform:none}
+.fade{opacity:0;transform:translateY(18px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+.fade.in{opacity:1;transform:none}
+
+/* ---------- HERO ---------- */
+#hero{border-top:none;padding-top:58px;min-height:100svh;display:flex;flex-direction:column;justify-content:space-between}
+.hero-top{display:flex;justify-content:space-between;gap:20px;padding:22px 0;flex-wrap:wrap}
+.hero-mid{padding:2vh 0 3vh}
+.hero-mid h1 .thin{-webkit-text-stroke:1px var(--fg);color:transparent}
+.hero-bot{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:end;padding-bottom:26px}
+@media(max-width:860px){.hero-bot{grid-template-columns:1fr;gap:26px}}
+.hcta{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:10px;border:1px solid var(--fg);background:var(--fg);color:var(--bg);padding:13px 22px;font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;position:relative;overflow:hidden;transition:color .4s var(--ease)}
+.btn span{position:relative;z-index:2}
+.btn::before{content:"";position:absolute;inset:0;background:var(--acc);transform:translateY(101%);transition:transform .45s var(--ease);z-index:1}
+.btn:hover::before{transform:none}
+.btn:hover{color:#fff}
+.btn.ghost{background:transparent;color:var(--fg);border-color:var(--line)}
+.btn.ghost:hover{color:#fff;border-color:var(--acc)}
+.heroimg{position:relative;overflow:hidden;height:34vh;min-height:220px}
+.heroimg img{width:100%;height:120%;object-fit:cover;filter:grayscale(1) contrast(1.05);transition:filter .6s}
+.heroimg:hover img{filter:none}
+.scrollhint{display:flex;align-items:center;gap:10px}
+.scrollhint .ln{width:44px;height:1px;background:var(--fg);transform-origin:left;animation:sweep 2.2s infinite var(--ease)}
+@keyframes sweep{0%{transform:scaleX(0)}50%{transform:scaleX(1)}100%{transform:scaleX(0);transform-origin:right}}
+
+/* ---------- MARQUEE ---------- */
+.marq{border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden;white-space:nowrap;padding:11px 0;background:var(--soft)}
+.marq .track{display:inline-flex;gap:40px;animation:scrollx 36s linear infinite;will-change:transform}
+.marq:hover .track{animation-play-state:paused}
+.marq span{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--fg)}
+.marq span b{color:var(--acc);font-weight:400}
+@keyframes scrollx{to{transform:translateX(-50%)}}
+
+/* ---------- STATS ---------- */
+.stats{display:grid;grid-template-columns:repeat(3,1fr)}
+.stats .st{padding:46px 24px;border-right:1px solid var(--line);position:relative;overflow:hidden}
+.stats .st:last-child{border-right:none}
+.stats .st::after{content:"";position:absolute;left:0;bottom:0;height:2px;width:0;background:var(--acc);transition:width .6s var(--ease)}
+.stats .st:hover::after{width:100%}
+.stats .num{font-size:clamp(2.6rem,6vw,5.4rem);font-weight:500;letter-spacing:-.05em;line-height:.9}
+.stats .num sup{font-size:.3em;vertical-align:super;color:var(--acc);letter-spacing:0}
+.stats p{margin-top:14px;max-width:30ch}
+@media(max-width:800px){.stats{grid-template-columns:1fr}.stats .st{border-right:none;border-bottom:1px solid var(--line);padding:30px 16px}}
+
+/* ---------- CONSTAT ---------- */
+.cgrid{display:grid;grid-template-columns:.8fr 1.2fr;gap:50px}
+@media(max-width:900px){.cgrid{grid-template-columns:1fr;gap:28px}}
+.stick{position:sticky;top:90px;align-self:start}
+.prow{border-bottom:1px solid var(--line);padding:26px 0;display:grid;grid-template-columns:54px 1fr;gap:16px;transition:padding-left .4s var(--ease)}
+.prow:hover{padding-left:12px}
+.prow .idx{font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:.1em;padding-top:5px}
+.prow h3{font-size:clamp(1.05rem,1.8vw,1.5rem);letter-spacing:-.025em}
+.prow p{margin-top:9px;max-width:60ch}
+
+/* ---------- INDEX / PRESTATIONS ---------- */
+.filters{display:flex;gap:7px;flex-wrap:wrap;padding:16px 0;border-bottom:1px solid var(--line);align-items:center}
+.chip{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--line);background:transparent;color:var(--mut);padding:7px 13px;transition:all .3s var(--ease)}
+.chip:hover{border-color:var(--fg);color:var(--fg)}
+.chip.on{background:var(--fg);border-color:var(--fg);color:var(--bg)}
+.fcount{margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--mut)}
+.idx-list{border-bottom:1px solid var(--line)}
+.item{border-bottom:1px solid var(--line);overflow:hidden;max-height:900px;transition:opacity .45s var(--ease),max-height .5s var(--ease),transform .45s var(--ease)}
+.item.hide{opacity:0;max-height:0;transform:translateY(-8px);pointer-events:none;border-color:transparent}
+.item.show{max-height:600px}
+.irow{display:grid;grid-template-columns:52px 34px 1fr auto 120px 26px;gap:16px;align-items:center;padding:20px 0;position:relative;transition:padding .4s var(--ease),color .3s}
+@media(max-width:860px){.irow{grid-template-columns:40px 1fr 26px;gap:10px;padding:16px 0}.irow .meta,.irow .mono.tag,.irow .glyph{display:none}}
+.irow::before{content:"";position:absolute;left:-28px;right:-28px;top:0;bottom:0;background:var(--soft);opacity:0;transition:opacity .35s var(--ease);z-index:-1}
+.item:hover .irow::before{opacity:1}
+.item:hover .irow{padding-left:14px}
+.irow .num{font-family:var(--mono);font-size:10px;color:var(--mut);letter-spacing:.1em}
+.irow .glyph svg{width:26px;height:26px;stroke:var(--fg);fill:none;stroke-width:1;transition:stroke .3s,transform .5s var(--ease)}
+.item:hover .glyph svg{stroke:var(--acc);transform:rotate(90deg)}
+.irow .ttl{font-size:clamp(1.1rem,2.4vw,1.9rem);font-weight:500;letter-spacing:-.03em;text-transform:uppercase;line-height:1}
+.irow .tag{border:1px solid var(--line);padding:4px 9px}
+.irow .meta{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--mut);text-align:right}
+.plus{width:22px;height:22px;position:relative;justify-self:end}
+.plus::before,.plus::after{content:"";position:absolute;background:var(--fg);transition:transform .4s var(--ease),background .3s}
+.plus::before{left:0;top:50%;width:100%;height:1px;margin-top:-.5px}
+.plus::after{top:0;left:50%;height:100%;width:1px;margin-left:-.5px}
+.item.open .plus::after{transform:rotate(90deg)}
+.item.open .plus::before,.item.open .plus::after{background:var(--acc)}
+.panel{display:grid;grid-template-rows:0fr;transition:grid-template-rows .55s var(--ease)}
+.item.open .panel{grid-template-rows:1fr}
+.panel>div{overflow:hidden}
+.pin{display:grid;grid-template-columns:52px 1fr 1fr;gap:16px;padding:0 0 30px}
+@media(max-width:860px){.pin{grid-template-columns:1fr;padding-bottom:22px}}
+.pin ul{list-style:none;display:grid;gap:8px}
+.pin li{font-size:14px;color:var(--mut);display:grid;grid-template-columns:16px 1fr;gap:8px}
+.pin li::before{content:"→";color:var(--acc)}
+.pin .ask{margin-top:16px;display:inline-flex;gap:8px;align-items:center;font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;border-bottom:1px solid var(--fg);padding-bottom:3px}
+
+/* ---------- CALCULATEUR ---------- */
+#calc{background:var(--soft)}
+.cal{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start}
+@media(max-width:900px){.cal{grid-template-columns:1fr;gap:34px}}
+.sld{margin-bottom:30px}
+.sld .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.sld .val{font-size:clamp(1.3rem,2.4vw,1.9rem);font-weight:500;letter-spacing:-.03em}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:1px;background:var(--line);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--acc);cursor:pointer;transition:transform .2s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.35)}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border:none;border-radius:50%;background:var(--acc);cursor:pointer}
+.res{border:1px solid var(--line);background:var(--bg)}
+.res .cell{padding:26px;border-bottom:1px solid var(--line)}
+.res .cell:last-child{border-bottom:none}
+.res .big-n{font-size:clamp(2.4rem,5.4vw,4.4rem);font-weight:500;letter-spacing:-.05em;line-height:.92}
+.res .big-n sup{font-size:.26em;vertical-align:super;color:var(--acc)}
+.bar{height:26px;display:flex;margin-top:18px;border:1px solid var(--line)}
+.bar i{display:block;transition:width .6s var(--ease)}
+.bar .b1{background:var(--acc)}
+.bar .b2{background:var(--fg);opacity:.18}
+.legend{display:flex;gap:18px;margin-top:10px;flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
+.legend i{width:9px;height:9px;display:block}
+.cur-tog{display:inline-flex;border:1px solid var(--line)}
+.cur-tog button{background:transparent;border:none;color:var(--mut);font-family:var(--mono);font-size:10px;letter-spacing:.1em;padding:6px 12px;transition:all .25s}
+.cur-tog button.on{background:var(--fg);color:var(--bg)}
+
+/* ---------- MÉTHODE (drag) ---------- */
+.drag{display:flex;gap:1px;overflow-x:auto;scrollbar-width:none;cursor:grab;user-select:none;background:var(--line);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.drag::-webkit-scrollbar{display:none}
+.drag.grabbing{cursor:grabbing}
+.scard{flex:0 0 min(420px,82vw);background:var(--bg);padding:38px 30px;min-height:330px;display:flex;flex-direction:column;justify-content:space-between;transition:background .4s}
+.scard:hover{background:var(--soft)}
+.scard .n{font-size:clamp(3rem,7vw,5.6rem);font-weight:500;letter-spacing:-.05em;line-height:.8;color:transparent;-webkit-text-stroke:1px var(--fg);transition:color .4s,-webkit-text-stroke .4s}
+.scard:hover .n{color:var(--acc);-webkit-text-stroke:1px var(--acc)}
+.scard h3{margin-top:auto;font-size:clamp(1.2rem,2.2vw,1.8rem);letter-spacing:-.03em}
+.scard p{margin-top:12px}
+.dragbar{height:1px;background:var(--line);position:relative;margin-top:0}
+.dragbar i{position:absolute;left:0;top:-1px;height:3px;background:var(--acc);width:20%;transition:width .2s,left .1s linear}
+
+/* ---------- VISION ---------- */
+#vision .q{font-size:clamp(1.5rem,4.2vw,3.6rem);font-weight:500;letter-spacing:-.04em;line-height:1.03;text-transform:uppercase;max-width:20ch}
+#vision .q em{font-style:normal;color:var(--acc)}
+.visgrid{display:grid;grid-template-columns:1fr auto;gap:40px;align-items:end}
+@media(max-width:800px){.visgrid{grid-template-columns:1fr}}
+
+/* ---------- FAQ ---------- */
+.faq{border-top:1px solid var(--line)}
+.q-item{border-bottom:1px solid var(--line)}
+.q-head{width:100%;background:transparent;border:none;color:var(--fg);display:flex;justify-content:space-between;align-items:center;gap:20px;padding:24px 0;text-align:left;font-family:var(--sans);font-size:clamp(1rem,2vw,1.45rem);font-weight:500;letter-spacing:-.025em;text-transform:uppercase;transition:padding-left .4s var(--ease),color .3s}
+.q-head:hover{padding-left:12px;color:var(--acc)}
+.q-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .5s var(--ease)}
+.q-item.open .q-body{grid-template-rows:1fr}
+.q-body>div{overflow:hidden}
+.q-body p{padding-bottom:24px;max-width:72ch}
+
+/* ---------- CONTACT ---------- */
+#contact{background:var(--fg);color:var(--bg)}
+#contact .mono,#contact p{color:#8d8a86}
+#contact .shead{border-color:#2a2927}
+.cont{display:grid;grid-template-columns:1fr 1fr;gap:56px;padding:60px 0}
+@media(max-width:900px){.cont{grid-template-columns:1fr;gap:36px;padding:40px 0}}
+.clist a{display:flex;justify-content:space-between;align-items:center;gap:16px;border-bottom:1px solid #2a2927;padding:16px 0;font-size:15px;transition:padding-left .4s var(--ease),color .3s}
+.clist a:hover{padding-left:10px;color:var(--acc)}
+.clist a .ar{font-family:var(--mono);font-size:11px}
+form{display:grid;gap:16px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:560px){.frow{grid-template-columns:1fr}}
+.field{position:relative}
+.field label{position:absolute;left:0;top:12px;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8d8a86;pointer-events:none;transition:all .3s var(--ease)}
+.field input,.field textarea,.field select{width:100%;background:transparent;border:none;border-bottom:1px solid #2a2927;color:var(--bg);padding:12px 0;font-family:var(--sans);font-size:15px;outline:none;transition:border-color .3s}
+.field select{color:#8d8a86;padding-top:22px}
+.field select option{background:#111;color:#eee}
+.field textarea{resize:none;min-height:46px}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--acc)}
+.field input:focus+label,.field textarea:focus+label,.field.filled label{top:-8px;font-size:9px;color:var(--acc)}
+.field.sel label{top:-2px;font-size:9px}
+.field.err input,.field.err textarea{border-color:var(--acc)}
+.fbtn{background:var(--bg);color:var(--fg);border:1px solid var(--bg);justify-content:center;width:100%}
+.ok{border:1px solid var(--acc);padding:22px;display:none}
+.ok.on{display:block;animation:pop .6s var(--ease)}
+@keyframes pop{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* ---------- FOOTER ---------- */
+footer{background:var(--fg);color:var(--bg);padding:40px 0 22px;border-top:1px solid #2a2927}
+.fgrid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:34px;padding-bottom:40px}
+@media(max-width:800px){.fgrid{grid-template-columns:1fr;gap:24px}}
+footer .mono{color:#8d8a86}
+footer .fl a{display:block;padding:5px 0;font-size:14px;color:#c9c6c2;transition:color .25s,transform .3s var(--ease)}
+footer .fl a:hover{color:var(--acc);transform:translateX(6px)}
+.fbot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid #2a2927;padding-top:18px}
+
+/* ---------- COMMAND MENU ---------- */
+#cmd{position:fixed;inset:0;z-index:950;display:none;align-items:flex-start;justify-content:center;padding-top:12vh;background:color-mix(in srgb,var(--bg) 72%,transparent);backdrop-filter:blur(8px)}
+#cmd.on{display:flex;animation:fadein .25s var(--ease)}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.cbox{width:min(640px,92vw);background:var(--bg);border:1px solid var(--fg);animation:pop .35s var(--ease)}
+.cbox input{width:100%;background:transparent;border:none;border-bottom:1px solid var(--line);color:var(--fg);padding:20px;font-family:var(--sans);font-size:18px;outline:none;letter-spacing:-.02em}
+.clist2{max-height:48vh;overflow-y:auto}
+.citem{display:flex;align-items:center;gap:14px;padding:13px 20px;border-bottom:1px solid var(--line);cursor:pointer}
+.citem:last-child{border-bottom:none}
+.citem.sel{background:var(--fg);color:var(--bg)}
+.citem.sel .mono{color:var(--bg)}
+.citem .t{font-size:14px;letter-spacing:-.01em}
+.citem .k{margin-left:auto}
+.cfoot{padding:11px 20px;border-top:1px solid var(--line);display:flex;gap:18px;flex-wrap:wrap}
+
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:.01ms!important}.sp i{transform:none}.fade{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="mono">[VOTRE NOM] — ASSISTANT ARCHITECTE<br>CHARGEMENT DE L'INDEX</div>
+  <div class="cnt">00</div>
+  <div class="bar"></div>
+</div>
+
+<!-- CURSOR + PREVIEW -->
+<div id="cur"><span class="lab"></span></div>
+<div id="curdot"></div>
+<div id="prev"><img alt=""></div>
+<div id="prog"></div>
+<div id="secm"><span class="n">01</span><span class="n" id="secname">INTRO</span></div>
+
+<!-- HEADER -->
+<header id="hd">
+  <div class="wrap nav">
+    <a href="#hero" class="brand"><span class="sq"></span>[VOTRE NOM]</a>
+    <nav class="nlinks">
+      <a href="#constat" data-nav>Constat</a>
+      <a href="#index" data-nav>Prestations</a>
+      <a href="#calc" data-nav>Calculateur</a>
+      <a href="#methode" data-nav>Méthode</a>
+      <a href="#vision" data-nav>Vision</a>
+      <a href="#contact" data-nav>Contact</a>
+    </nav>
+    <div class="ntools">
+      <span id="clock">COTONOU — 00:00:00</span>
+      <button class="kbtn" id="openCmd" data-cursor="MENU"><span class="txt">Menu</span> <kbd>⌘K</kbd></button>
+      <button class="kbtn" id="theme" data-cursor="THÈME">◐</button>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section id="hero" data-name="INTRO">
+  <div class="wrap">
+    <div class="hero-top">
+      <div class="mono">01 — Assistant architecte indépendant</div>
+      <div class="mono">Disponible — [2] cabinets ce mois-ci</div>
+      <div class="mono">Benin · Remote worldwide</div>
+    </div>
+    <div class="hero-mid">
+      <h1 class="display" data-split>Les architectes ne manquent pas de talent.</h1>
+      <h1 class="display" data-split><span class="thin">Ils manquent de temps.</span></h1>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="hero-bot">
+      <div>
+        <p class="lead fade">Croquis en retard, dossiers qui s'empilent, journées avalées par l'administratif. Je prends en charge les tâches qui vous ralentissent — pour que vous reveniez à ce qui compte vraiment : concevoir.</p>
+        <div class="hcta fade">
+          <a href="#contact" class="btn" data-cursor="ALLONS-Y"><span>Réserver 20 minutes</span></a>
+          <a href="#index" class="btn ghost" data-cursor="VOIR"><span>Index des prestations</span></a>
+        </div>
+        <div class="scrollhint fade" style="margin-top:28px"><span class="ln"></span><span class="mono">Défiler</span></div>
+      </div>
+      <div class="heroimg fade" data-parallax data-cursor="STUDIO">
+        <img src="data:image/jpeg;base64,__HERO__" alt="Bureau d'architecte">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marq">
+  <div class="track">
+    <span>Production graphique <b>✶</b> Modélisation BIM <b>✶</b> Dossiers de permis <b>✶</b> Suivi de chantier <b>✶</b> Rendus &amp; planches <b>✶</b> Suivi documentaire <b>✶</b>&nbsp;</span>
+    <span>Production graphique <b>✶</b> Modélisation BIM <b>✶</b> Dossiers de permis <b>✶</b> Suivi de chantier <b>✶</b> Rendus &amp; planches <b>✶</b> Suivi documentaire <b>✶</b>&nbsp;</span>
+  </div>
+</div>
+
+<!-- STATS -->
+<section data-name="CHIFFRES">
+  <div class="stats">
+    <div class="st fade"><div class="num"><span data-count="60">0</span><sup>%</sup></div><p>du temps d'un architecte part dans des tâches qui ne relèvent pas de la conception.</p></div>
+    <div class="st fade"><div class="num">+<span data-count="12">0</span><sup>H</sup></div><p>libérées chaque semaine en déléguant la production documentaire et le suivi.</p></div>
+    <div class="st fade"><div class="num"><span data-count="0">0</span><sup>€</sup></div><p>de charges fixes : pas de salaire, pas de poste, pas d'engagement de durée.</p></div>
+  </div>
+</section>
+
+<!-- CONSTAT -->
+<section id="constat" data-name="CONSTAT">
+  <div class="wrap">
+    <div class="shead"><span class="mono">02 — Le constat</span><span class="mono">Ce qui revient dans chaque cabinet</span></div>
+    <div class="pad cgrid">
+      <div class="stick">
+        <h2 class="big" data-split>Trop de projets. Pas assez d'heures.</h2>
+      </div>
+      <div>
+        <div class="prow fade"><span class="idx">01</span><div><h3>Les tâches annexes mangent la journée</h3><p>Mises au net, nomenclatures, relances, classement, comptes-rendus de chantier. Rien de tout cela ne demande votre signature — mais tout cela prend vos heures.</p></div></div>
+        <div class="prow fade"><span class="idx">02</span><div><h3>Embaucher est trop lourd, refuser est trop cher</h3><p>Un poste à temps plein ne se justifie pas sur une charge irrégulière. Alors on accepte le projet de trop, ou on laisse partir une belle commande.</p></div></div>
+        <div class="prow fade"><span class="idx">03</span><div><h3>La qualité finit par payer l'addition</h3><p>Délais serrés, livrables bâclés, relation client négligée. L'épuisement s'installe et la créativité — votre vraie valeur ajoutée — s'éteint en silence.</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INDEX PRESTATIONS -->
+<section id="index" data-name="PRESTATIONS">
+  <div class="wrap">
+    <div class="shead"><span class="mono">03 — Index des prestations</span><span class="mono">Survolez · cliquez pour ouvrir</span></div>
+    <div class="filters">
+      <button class="chip on" data-f="all">Tout</button>
+      <button class="chip" data-f="conception">Conception</button>
+      <button class="chip" data-f="documents">Documents</button>
+      <button class="chip" data-f="gestion">Gestion</button>
+      <button class="chip" data-f="image">Image</button>
+      <span class="fcount"><span id="fc">05</span> / 05 prestations</span>
+    </div>
+
+    <div class="idx-list" id="list">
+
+      <article class="item" data-cat="conception documents" data-img="data:image/jpeg;base64,__IMG1__">
+        <div class="irow" data-cursor="OUVRIR">
+          <span class="num">001</span>
+          <span class="glyph"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18"/><path d="M3 9h18M9 21V9"/></svg></span>
+          <h3 class="ttl">Production graphique</h3>
+          <span class="mono tag">Conception</span>
+          <span class="meta">AutoCAD · ArchiCAD<br>Délai 48 h</span>
+          <span class="plus"></span>
+        </div>
+        <div class="panel"><div><div class="pin">
+          <span></span>
+          <p>Mise au net de plans, coupes, façades et détails techniques. Je travaille dans vos gabarits, vos calques et vos standards graphiques — le livrable s'intègre à votre dossier sans retouche.</p>
+          <div><ul><li>Plans, coupes, façades, détails</li><li>Mise à l'échelle et habillage</li><li>Carnets de documents harmonisés</li><li>Reprise de fonds de plan existants</li></ul>
+          <a href="#contact" class="ask" data-cursor="DEVIS">Demander un devis →</a></div>
+        </div></div></div>
+      </article>
+
+      <article class="item" data-cat="conception image" data-img="data:image/jpeg;base64,__IMG2__">
+        <div class="irow" data-cursor="OUVRIR">
+          <span class="num">002</span>
+          <span class="glyph"><svg viewBox="0 0 24 24"><path d="M12 2l9 5-9 5-9-5 9-5z"/><path d="M3 12l9 5 9-5"/></svg></span>
+          <h3 class="ttl">Modélisation 3D &amp; BIM</h3>
+          <span class="mono tag">Conception</span>
+          <span class="meta">Revit · SketchUp<br>Délai 3–5 j</span>
+          <span class="plus"></span>
+        </div>
+        <div class="panel"><div><div class="pin">
+          <span></span>
+          <p>Maquettes numériques exploitables, modélisation volumétrique et mise à jour de modèles existants. Vous récupérez un fichier propre, structuré et documenté.</p>
+          <div><ul><li>Modélisation volumétrique et BIM</li><li>Mise à jour de modèles existants</li><li>Extraction de vues et de coupes</li><li>Nomenclatures liées au modèle</li></ul>
+          <a href="#contact" class="ask" data-cursor="DEVIS">Demander un devis →</a></div>
+        </div></div></div>
+      </article>
+
+      <article class="item" data-cat="documents" data-img="data:image/jpeg;base64,__IMG3__">
+        <div class="irow" data-cursor="OUVRIR">
+          <span class="num">003</span>
+          <span class="glyph"><svg viewBox="0 0 24 24"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h4M9 13h7M9 17h7"/></svg></span>
+          <h3 class="ttl">Dossiers &amp; pièces écrites</h3>
+          <span class="mono tag">Documents</span>
+          <span class="meta">Permis · CCTP<br>Délai 5 j</span>
+          <span class="plus"></span>
+        </div>
+        <div class="panel"><div><div class="pin">
+          <span></span>
+          <p>Montage complet de dossiers administratifs et rédaction des pièces écrites, prêts à déposer. Vous relisez, vous signez.</p>
+          <div><ul><li>Dossiers de permis de construire</li><li>Notices descriptives et CCTP</li><li>Nomenclatures et quantitatifs</li><li>Pièces administratives et annexes</li></ul>
+          <a href="#contact" class="ask" data-cursor="DEVIS">Demander un devis →</a></div>
+        </div></div></div>
+      </article>
+
+      <article class="item" data-cat="gestion" data-img="data:image/jpeg;base64,__IMG4__">
+        <div class="irow" data-cursor="OUVRIR">
+          <span class="num">004</span>
+          <span class="glyph"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span>
+          <h3 class="ttl">Suivi de projet</h3>
+          <span class="mono tag">Gestion</span>
+          <span class="meta">Hebdomadaire<br>En continu</span>
+          <span class="plus"></span>
+        </div>
+        <div class="panel"><div><div class="pin">
+          <span></span>
+          <p>Je tiens le planning et la mémoire du projet : qui doit quoi, pour quand. Vous arrivez en réunion avec un dossier à jour.</p>
+          <div><ul><li>Planning et jalons</li><li>Relances BET, fournisseurs, entreprises</li><li>Comptes-rendus de réunion</li><li>Tableau de bord d'avancement</li></ul>
+          <a href="#contact" class="ask" data-cursor="DEVIS">Demander un devis →</a></div>
+        </div></div></div>
+      </article>
+
+      <article class="item" data-cat="image conception" data-img="data:image/jpeg;base64,__IMG5__">
+        <div class="irow" data-cursor="OUVRIR">
+          <span class="num">005</span>
+          <span class="glyph"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="14"/><path d="M2 14l6-5 4 3 4-4 6 6"/></svg></span>
+          <h3 class="ttl">Rendus &amp; présentations</h3>
+          <span class="mono tag">Image</span>
+          <span class="meta">InDesign · Lumion<br>Délai 3 j</span>
+          <span class="plus"></span>
+        </div>
+        <div class="panel"><div><div class="pin">
+          <span></span>
+          <p>Des documents qui vendent le projet avant même la réunion : planches de concours, books et images d'ambiance mis en page au cordeau.</p>
+          <div><ul><li>Planches de concours</li><li>Books projets et portfolios</li><li>Images d'ambiance et diagrammes</li><li>Mise en page client soignée</li></ul>
+          <a href="#contact" class="ask" data-cursor="DEVIS">Demander un devis →</a></div>
+        </div></div></div>
+      </article>
+
+
+    </div>
+    <p style="padding:22px 0">Besoin d'autre chose ? <a href="#contact" class="hl" style="border-bottom:1px solid currentColor">Dites-moi ce qui vous encombre</a> — on construit le périmètre ensemble.</p>
+  </div>
+</section>
+
+<!-- CALCULATEUR -->
+<section id="calc" data-name="CALCULATEUR">
+  <div class="wrap">
+    <div class="shead"><span class="mono">04 — Calculateur</span><span class="mono">Estimation en direct</span></div>
+    <div class="pad cal">
+      <div>
+        <h2 class="med" data-split style="margin-bottom:30px">Combien vous coûte<br>ce que vous ne déléguez pas ?</h2>
+        <div class="sld">
+          <div class="top"><span class="mono">Heures/semaine sur des tâches annexes</span><span class="val"><span id="v1">12</span> h</span></div>
+          <input type="range" id="s1" min="2" max="35" value="12" data-cursor="GLISSER">
+        </div>
+        <div class="sld">
+          <div class="top"><span class="mono">Votre taux horaire facturé</span><span class="val"><span id="v2">60</span> <span class="cu">€</span></span></div>
+          <input type="range" id="s2" min="15" max="200" step="5" value="60" data-cursor="GLISSER">
+        </div>
+        <div class="sld">
+          <div class="top"><span class="mono">Part que vous déléguez</span><span class="val"><span id="v3">60</span> %</span></div>
+          <input type="range" id="s3" min="10" max="90" step="5" value="60" data-cursor="GLISSER">
+        </div>
+        <div class="cur-tog" role="group">
+          <button class="on" data-cur="EUR">EUR €</button>
+          <button data-cur="XOF">FCFA</button>
+        </div>
+      </div>
+      <div class="res">
+        <div class="cell">
+          <div class="mono">Temps récupéré par mois</div>
+          <div class="big-n" style="margin-top:10px"><span id="r1">31</span><sup>H</sup></div>
+          <div class="bar"><i class="b1" id="bar1" style="width:60%"></i><i class="b2" id="bar2" style="width:40%"></i></div>
+          <div class="legend"><span><i class="b1" style="background:var(--acc)"></i>Délégué</span><span><i class="b2" style="background:var(--fg);opacity:.18"></i>Reste à votre charge</span></div>
+        </div>
+        <div class="cell">
+          <div class="mono">Valeur facturable récupérée par an</div>
+          <div class="big-n" style="margin-top:10px"><span id="r2">22 464</span><sup class="cu">€</sup></div>
+        </div>
+        <div class="cell">
+          <div class="mono">Soit l'équivalent de</div>
+          <div class="big-n" style="margin-top:10px"><span id="r3">47</span><sup>J</sup></div>
+          <p style="margin-top:10px">journées de travail rendues à la conception, chaque année.</p>
+        </div>
+        <div class="cell"><a href="#contact" class="btn" style="width:100%;justify-content:center" data-cursor="ALLONS-Y"><span>Récupérer ces heures</span></a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MÉTHODE -->
+<section id="methode" data-name="MÉTHODE">
+  <div class="wrap">
+    <div class="shead"><span class="mono">05 — La méthode</span><span class="mono">Glissez horizontalement →</span></div>
+  </div>
+  <div class="drag" id="drag" data-cursor="GLISSER">
+    <div class="scard"><div class="n">01</div><div><h3>On fait le tri</h3><p>20 minutes d'appel pour identifier ce qui vous prend du temps sans vous en rapporter. Je repars avec une liste, vous repartez avec un plan.</p></div></div>
+    <div class="scard"><div class="n">02</div><div><h3>On cadre</h3><p>Périmètre, délais, outils, format de collaboration et tarif fixés à l'avance. Aucune zone grise, aucun dépassement sans accord écrit.</p></div></div>
+    <div class="scard"><div class="n">03</div><div><h3>On teste</h3><p>Un premier lot limité avant tout engagement large. Si le résultat ne vous convainc pas, on s'arrête là, sans justification.</p></div></div>
+    <div class="scard"><div class="n">04</div><div><h3>Vous récupérez vos heures</h3><p>Je travaille dans vos standards et vos gabarits. Point d'avancement régulier, livrables prêts à l'emploi, aucune surprise.</p></div></div>
+  </div>
+  <div class="dragbar"><i id="dbar"></i></div>
+</section>
+
+<!-- VISION -->
+<section id="vision" data-name="VISION">
+  <div class="wrap">
+    <div class="shead"><span class="mono">06 — La vision</span><span class="mono">Pourquoi ce métier</span></div>
+    <div class="pad visgrid">
+      <div>
+        <p class="q" data-split>Un architecte devrait passer ses journées à concevoir, <em>pas à classer des fichiers.</em></p>
+        <p class="lead fade" style="margin-top:28px">Ma mission est simple : vous rendre votre ressource la plus rare. Du temps à réinvestir dans la création, la relation client et le développement de votre cabinet.</p>
+      </div>
+      <div class="fade">
+        <div class="mono">Signé</div>
+        <div style="font-size:19px;letter-spacing:-.02em;margin-top:6px">[Votre nom]</div>
+        <div class="mono" style="margin-top:4px">Assistant architecte</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" data-name="FAQ">
+  <div class="wrap">
+    <div class="shead"><span class="mono">07 — Questions fréquentes</span><span class="mono">Avant de se parler</span></div>
+    <div class="faq pad" style="padding-bottom:0">
+      <div class="q-item open"><button class="q-head" data-cursor="LIRE">Travaillez-vous à distance ?<span class="plus"></span></button><div class="q-body"><div><p>Oui, à 100 %. J'interviens sur vos outils et vos gabarits, avec des points d'avancement réguliers. Un déplacement ponctuel reste possible selon le projet.</p></div></div></div>
+      <div class="q-item"><button class="q-head" data-cursor="LIRE">Quels logiciels maîtrisez-vous ?<span class="plus"></span></button><div class="q-body"><div><p>[AutoCAD, ArchiCAD, Revit, SketchUp, Lumion, Photoshop, InDesign, Suite Office…] — à compléter avec vos outils réels.</p></div></div></div>
+      <div class="q-item"><button class="q-head" data-cursor="LIRE">Comment facturez-vous ?<span class="plus"></span></button><div class="q-body"><div><p>Trois formules : à l'heure, au forfait projet, ou en abonnement mensuel d'un volume d'heures réservé. Le tarif est annoncé avant de commencer — jamais de dépassement sans votre accord écrit.</p></div></div></div>
+      <div class="q-item"><button class="q-head" data-cursor="LIRE">Et si je ne veux tester que sur un petit lot ?<span class="plus"></span></button><div class="q-body"><div><p>C'est exactement ce que je recommande. On démarre sur une tâche limitée. Si le résultat ne vous convainc pas, on s'arrête là, sans justification.</p></div></div></div>
+      <div class="q-item"><button class="q-head" data-cursor="LIRE">Signez-vous un accord de confidentialité ?<span class="plus"></span></button><div class="q-body"><div><p>Systématiquement si vous le souhaitez. Vos plans, vos clients et vos méthodes ne quittent jamais le cadre de notre collaboration.</p></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact" data-name="CONTACT">
+  <div class="wrap">
+    <div class="shead"><span class="mono">08 — Contact</span><span class="mono">Réponse sous 24 h ouvrées</span></div>
+    <div class="cont">
+      <div>
+        <h2 class="big" data-split>Dites-moi ce qui vous prend du temps.</h2>
+        <p class="lead" style="margin-top:22px;color:#c9c6c2">Vingt minutes suffisent pour savoir si je peux vous soulager.</p>
+        <div class="clist" style="margin-top:34px">
+          <a href="mailto:[votre@email.com]" data-cursor="ÉCRIRE">[votre@email.com]<span class="ar">↗</span></a>
+          <a href="tel:+22900000000" data-cursor="APPELER">[+229 00 00 00 00]<span class="ar">↗</span></a>
+          <a href="#" data-cursor="LINKEDIN">LinkedIn — [votre profil]<span class="ar">↗</span></a>
+          <a href="#" data-cursor="AGENDA">Réserver un créneau — [lien Calendly]<span class="ar">↗</span></a>
+        </div>
+      </div>
+      <div>
+        <form id="form" novalidate>
+          <div class="frow">
+            <div class="field"><input id="f1" type="text" required><label for="f1">Nom *</label></div>
+            <div class="field"><input id="f2" type="text"><label for="f2">Cabinet</label></div>
+          </div>
+          <div class="field"><input id="f3" type="email" required><label for="f3">Email *</label></div>
+          <div class="field sel">
+            <select id="f4">
+              <option>Production graphique</option>
+              <option>Modélisation 3D / BIM</option>
+              <option>Dossiers &amp; pièces écrites</option>
+              <option>Suivi de projet</option>
+              <option>Rendus &amp; présentations</option>
+              <option>À définir ensemble</option>
+            </select>
+            <label for="f4">Besoin principal</label>
+          </div>
+          <div class="field"><textarea id="f5" rows="1"></textarea><label for="f5">Message</label></div>
+          <button type="submit" class="btn fbtn" data-cursor="ENVOYER"><span>Envoyer la demande</span></button>
+          <p class="mono" id="fnote">Démo — à brancher sur Formspree / Tally à la mise en ligne</p>
+        </form>
+        <div class="ok" id="ok">
+          <div class="mono hl">Message envoyé</div>
+          <p style="color:#c9c6c2;margin-top:8px">Merci <span id="okname"></span>. Je reviens vers vous sous 24 h ouvrées avec un créneau et une première estimation.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="fgrid">
+      <div>
+        <div class="display" style="font-size:clamp(2rem,7vw,5.4rem);line-height:.9">[VOTRE NOM]</div>
+        <div class="mono" style="margin-top:12px">Assistant architecte — disponible en remote</div>
+      </div>
+      <div class="fl"><div class="mono" style="margin-bottom:10px">Index</div>
+        <a href="#constat">Constat</a><a href="#index">Prestations</a><a href="#calc">Calculateur</a><a href="#methode">Méthode</a>
+      </div>
+      <div class="fl"><div class="mono" style="margin-bottom:10px">Contact</div>
+        <a href="mailto:[votre@email.com]">Email</a><a href="#">LinkedIn</a><a href="#">Instagram</a><a href="#contact">Formulaire</a>
+      </div>
+    </div>
+    <div class="fbot">
+      <span class="mono">© <span id="yr">2026</span> [Votre nom]</span>
+      <span class="mono">⌘K pour le menu · T pour le thème</span>
+      <a href="#hero" class="mono" data-cursor="HAUT">Retour en haut ↑</a>
+    </div>
+  </div>
+</footer>
+
+<!-- COMMAND MENU -->
+<div id="cmd">
+  <div class="cbox">
+    <input id="cin" type="text" placeholder="Rechercher une section, une prestation, une action…" autocomplete="off">
+    <div class="clist2" id="clist2"></div>
+    <div class="cfoot"><span class="mono">↑↓ naviguer</span><span class="mono">↵ ouvrir</span><span class="mono">esc fermer</span></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var fine = matchMedia('(hover:hover) and (pointer:fine)').matches;
+
+  /* ---------- LOADER ---------- */
+  var cnt=document.querySelector('#loader .cnt'), bar=document.querySelector('#loader .bar'), p=0;
+  var li=setInterval(function(){
+    p += Math.random()*18;
+    if(p>=100){p=100;clearInterval(li);setTimeout(function(){document.body.classList.add('loaded');kick();},320);}
+    cnt.textContent = String(Math.floor(p)).padStart(2,'0');
+    bar.style.width = p+'%';
+  }, RM?30:90);
+
+  /* ---------- SPLIT TEXT ---------- */
+  document.querySelectorAll('[data-split]').forEach(function(el){
+    var html='', nodes=Array.prototype.slice.call(el.childNodes);
+    nodes.forEach(function(n){
+      if(n.nodeType===3){
+        n.textContent.split(/(\s+)/).forEach(function(w){
+          html += /^\s+$/.test(w) ? ' ' : '<span class="sp"><i>'+w+'</i></span>';
+        });
+      } else {
+        var cls = n.className ? ' class="'+n.className+'"' : '';
+        var inner='';
+        n.textContent.split(/(\s+)/).forEach(function(w){ inner += /^\s+$/.test(w)?' ':'<span class="sp"><i>'+w+'</i></span>'; });
+        html += '<'+n.tagName.toLowerCase()+cls+'>'+inner+'</'+n.tagName.toLowerCase()+'>';
+      }
+    });
+    el.innerHTML = html;
+    el.querySelectorAll('.sp i').forEach(function(i,k){ i.style.transitionDelay = Math.min(k*32,520)+'ms'; });
+  });
+
+  /* ---------- REVEAL ---------- */
+  var io = new IntersectionObserver(function(e){
+    e.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target);} });
+  },{threshold:.15,rootMargin:'0px 0px -8% 0px'});
+  document.querySelectorAll('[data-split],.fade').forEach(function(el,i){
+    if(el.classList.contains('fade')) el.style.transitionDelay = Math.min((i%4)*80,320)+'ms';
+    io.observe(el);
+  });
+  function kick(){ document.querySelectorAll('#hero [data-split],#hero .fade').forEach(function(el){ el.classList.add('in'); }); }
+
+  /* ---------- CURSOR ---------- */
+  if(fine){
+    var cur=document.getElementById('cur'), dot=document.getElementById('curdot'), lab=cur.querySelector('.lab');
+    var mx=innerWidth/2,my=innerHeight/2,cx=mx,cy=my,dx=mx,dy=my;
+    addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY;});
+    (function loop(){
+      cx+=(mx-cx)*.16; cy+=(my-cy)*.16; dx+=(mx-dx)*.5; dy+=(my-dy)*.5;
+      cur.style.transform='translate('+cx+'px,'+cy+'px)';
+      dot.style.transform='translate('+dx+'px,'+dy+'px)';
+      requestAnimationFrame(loop);
+    })();
+    document.addEventListener('mouseover',function(e){
+      var t=e.target.closest('[data-cursor],a,button');
+      if(t){ cur.classList.add('grow'); lab.textContent = t.getAttribute('data-cursor') || ''; }
+      else { cur.classList.remove('grow'); lab.textContent=''; }
+    });
+  }
+
+  /* ---------- HOVER PREVIEW ---------- */
+  var prev=document.getElementById('prev'), pimg=prev.querySelector('img');
+  var px=0,py=0,tx=0,ty=0,pon=false;
+  document.querySelectorAll('.item').forEach(function(it){
+    var row=it.querySelector('.irow');
+    row.addEventListener('mouseenter',function(){ pimg.src=it.getAttribute('data-img'); prev.classList.add('on'); pon=true; });
+    row.addEventListener('mouseleave',function(){ prev.classList.remove('on'); pon=false; });
+  });
+  addEventListener('mousemove',function(e){ tx=e.clientX+170; ty=e.clientY; });
+  (function pl(){ px+=(tx-px)*.1; py+=(ty-py)*.1;
+    if(pon) prev.style.left=px+'px', prev.style.top=py+'px';
+    requestAnimationFrame(pl);
+  })();
+
+  /* ---------- ACCORDIONS ---------- */
+  document.querySelectorAll('.item .irow').forEach(function(r){
+    r.addEventListener('click',function(){ r.parentElement.classList.toggle('open'); });
+  });
+  document.querySelectorAll('.q-head').forEach(function(h){
+    h.addEventListener('click',function(){ h.parentElement.classList.toggle('open'); });
+  });
+
+  /* ---------- FILTERS ---------- */
+  var items=document.querySelectorAll('.item'), fc=document.getElementById('fc');
+  document.querySelectorAll('.chip').forEach(function(c){
+    c.addEventListener('click',function(){
+      document.querySelectorAll('.chip').forEach(function(x){x.classList.remove('on')});
+      c.classList.add('on');
+      var f=c.getAttribute('data-f'), n=0;
+      items.forEach(function(it){
+        var ok = f==='all' || it.getAttribute('data-cat').indexOf(f)>-1;
+        it.classList.toggle('hide',!ok);
+        if(ok){n++;} else {it.classList.remove('open');}
+      });
+      fc.textContent=String(n).padStart(2,'0');
+    });
+  });
+
+  /* ---------- COUNTERS ---------- */
+  var cio=new IntersectionObserver(function(e){
+    e.forEach(function(en){
+      if(!en.isIntersecting) return;
+      var el=en.target, to=+el.getAttribute('data-count'), t0=null, D=1400;
+      requestAnimationFrame(function st(ts){
+        if(!t0)t0=ts; var k=Math.min((ts-t0)/D,1);
+        el.textContent=Math.round(to*(1-Math.pow(1-k,3)));
+        if(k<1)requestAnimationFrame(st);
+      });
+      cio.unobserve(el);
+    });
+  },{threshold:.6});
+  document.querySelectorAll('[data-count]').forEach(function(el){cio.observe(el)});
+
+  /* ---------- SCROLL: progress, header, section meter, parallax ---------- */
+  var prog=document.getElementById('prog'), hd=document.getElementById('hd'),
+      secs=document.querySelectorAll('section[data-name]'), sname=document.getElementById('secname'),
+      snum=document.querySelector('#secm .n'), para=document.querySelectorAll('[data-parallax] img');
+  function onScroll(){
+    var y=scrollY, h=document.body.scrollHeight-innerHeight;
+    prog.style.width=(y/h*100)+'%';
+    hd.classList.toggle('solid', y>40);
+    var ci=0;
+    secs.forEach(function(s,i){ if(s.getBoundingClientRect().top<innerHeight*.45) ci=i; });
+    snum.textContent=String(ci+1).padStart(2,'0');
+    sname.textContent=secs[ci].getAttribute('data-name');
+    document.querySelectorAll('[data-nav]').forEach(function(a){
+      a.classList.toggle('act', a.getAttribute('href')==='#'+secs[ci].id);
+    });
+    if(!RM) para.forEach(function(img){
+      var r=img.parentElement.getBoundingClientRect();
+      if(r.bottom>0&&r.top<innerHeight) img.style.transform='translateY('+((r.top-innerHeight/2)*-.04)+'px)';
+    });
+  }
+  addEventListener('scroll',onScroll,{passive:true}); onScroll();
+
+  /* ---------- CLOCK ---------- */
+  var ck=document.getElementById('clock');
+  setInterval(function(){ ck.textContent='COTONOU — '+new Date().toLocaleTimeString('fr-FR',{hour12:false}); },1000);
+  document.getElementById('yr').textContent=new Date().getFullYear();
+
+  /* ---------- THEME ---------- */
+  var root=document.documentElement;
+  try{ var sv=localStorage.getItem('th'); if(sv) root.setAttribute('data-theme',sv); }catch(e){}
+  function toggleTheme(){
+    var n = root.getAttribute('data-theme')==='dark'?'light':'dark';
+    root.setAttribute('data-theme',n); try{localStorage.setItem('th',n)}catch(e){}
+  }
+  document.getElementById('theme').addEventListener('click',toggleTheme);
+
+  /* ---------- DRAG SCROLL ---------- */
+  var dr=document.getElementById('drag'), dbar=document.getElementById('dbar'), down=false, sx=0, sl=0;
+  dr.addEventListener('pointerdown',function(e){down=true;sx=e.clientX;sl=dr.scrollLeft;dr.classList.add('grabbing');});
+  addEventListener('pointerup',function(){down=false;dr.classList.remove('grabbing');});
+  dr.addEventListener('pointermove',function(e){ if(!down)return; e.preventDefault(); dr.scrollLeft=sl-(e.clientX-sx)*1.4; });
+  function dbarUpd(){
+    var max=dr.scrollWidth-dr.clientWidth, r=dr.clientWidth/dr.scrollWidth;
+    dbar.style.width=(r*100)+'%';
+    dbar.style.left=(max?dr.scrollLeft/max*(100-r*100):0)+'%';
+  }
+  dr.addEventListener('scroll',dbarUpd,{passive:true}); addEventListener('resize',dbarUpd); dbarUpd();
+
+  /* ---------- CALCULATEUR ---------- */
+  var RATE=655.957, curr='EUR';
+  var s1=document.getElementById('s1'),s2=document.getElementById('s2'),s3=document.getElementById('s3');
+  function fmt(n){ return Math.round(n).toLocaleString('fr-FR').replace(/\u202f|\u00a0/g,' '); }
+  function calc(){
+    var h=+s1.value, t=+s2.value, p=+s3.value;
+    document.getElementById('v1').textContent=h;
+    document.getElementById('v2').textContent= curr==='EUR'? t : fmt(t*RATE);
+    document.getElementById('v3').textContent=p;
+    var hm=h*(p/100)*4.33, val=hm*12*t, days=hm*12/8;
+    document.getElementById('r1').textContent=Math.round(hm);
+    document.getElementById('r2').textContent=fmt(curr==='EUR'?val:val*RATE);
+    document.getElementById('r3').textContent=Math.round(days);
+    document.getElementById('bar1').style.width=p+'%';
+    document.getElementById('bar2').style.width=(100-p)+'%';
+    document.querySelectorAll('.cu').forEach(function(e){e.textContent= curr==='EUR'?'€':'F';});
+  }
+  [s1,s2,s3].forEach(function(s){s.addEventListener('input',calc)});
+  document.querySelectorAll('.cur-tog button').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('.cur-tog button').forEach(function(x){x.classList.remove('on')});
+      b.classList.add('on'); curr=b.getAttribute('data-cur'); calc();
+    });
+  });
+  calc();
+
+  /* ---------- FORM ---------- */
+  var form=document.getElementById('form');
+  document.querySelectorAll('.field input,.field textarea').forEach(function(i){
+    i.addEventListener('input',function(){
+      i.parentElement.classList.toggle('filled', !!i.value);
+      i.parentElement.classList.remove('err');
+      if(i.tagName==='TEXTAREA'){ i.style.height='auto'; i.style.height=i.scrollHeight+'px'; }
+    });
+  });
+  form.addEventListener('submit',function(e){
+    e.preventDefault();
+    var ok=true;
+    [['f1',function(v){return v.trim().length>1}],['f3',function(v){return /.+@.+\..+/.test(v)}]].forEach(function(p){
+      var el=document.getElementById(p[0]);
+      if(!p[1](el.value)){ el.parentElement.classList.add('err'); ok=false; }
+    });
+    if(!ok){ document.getElementById('fnote').textContent='Vérifiez le nom et l\'email.'; return; }
+    document.getElementById('okname').textContent=document.getElementById('f1').value.split(' ')[0];
+    form.style.display='none';
+    document.getElementById('ok').classList.add('on');
+  });
+
+  /* ---------- MAGNETIC ---------- */
+  if(fine && !RM) document.querySelectorAll('.btn').forEach(function(b){
+    b.addEventListener('mousemove',function(e){
+      var r=b.getBoundingClientRect();
+      b.style.transform='translate('+((e.clientX-r.left-r.width/2)*.18)+'px,'+((e.clientY-r.top-r.height/2)*.3)+'px)';
+    });
+    b.addEventListener('mouseleave',function(){ b.style.transition='transform .5s cubic-bezier(.19,1,.22,1)'; b.style.transform=''; setTimeout(function(){b.style.transition=''},500); });
+  });
+
+  /* ---------- COMMAND MENU ---------- */
+  var CMD=[
+    {t:'Aller au constat',k:'SECTION',a:function(){go('#constat')}},
+    {t:'Index des prestations',k:'SECTION',a:function(){go('#index')}},
+    {t:'Calculateur de temps perdu',k:'OUTIL',a:function(){go('#calc')}},
+    {t:'La méthode en 4 étapes',k:'SECTION',a:function(){go('#methode')}},
+    {t:'La vision',k:'SECTION',a:function(){go('#vision')}},
+    {t:'Questions fréquentes',k:'SECTION',a:function(){go('#faq')}},
+    {t:'Production graphique',k:'PRESTATION',a:function(){openItem(0)}},
+    {t:'Modélisation 3D & BIM',k:'PRESTATION',a:function(){openItem(1)}},
+    {t:'Dossiers & pièces écrites',k:'PRESTATION',a:function(){openItem(2)}},
+    {t:'Suivi de projet',k:'PRESTATION',a:function(){openItem(3)}},
+    {t:'Rendus & présentations',k:'PRESTATION',a:function(){openItem(4)}},
+    {t:'Basculer le thème clair / sombre',k:'ACTION',a:toggleTheme},
+    {t:'Écrire un email',k:'ACTION',a:function(){location.href='mailto:[votre@email.com]'}},
+    {t:'Réserver un appel',k:'ACTION',a:function(){go('#contact')}}
+  ];
+  var cmd=document.getElementById('cmd'), cin=document.getElementById('cin'), cl=document.getElementById('clist2'), sel=0, cur=[];
+  function go(h){ closeCmd(); var el=document.querySelector(h)||document.getElementById('contact'); el.scrollIntoView({behavior:RM?'auto':'smooth'}); }
+  function openItem(i){ closeCmd(); var it=document.querySelectorAll('.item')[i]; document.querySelectorAll('.item').forEach(function(x){x.classList.remove('open')}); it.classList.remove('hide'); it.classList.add('open'); it.scrollIntoView({behavior:RM?'auto':'smooth',block:'center'}); }
+  function render(q){
+    cur=CMD.filter(function(c){return c.t.toLowerCase().indexOf(q.toLowerCase())>-1 || c.k.toLowerCase().indexOf(q.toLowerCase())>-1;});
+    sel=0;
+    cl.innerHTML = cur.length ? cur.map(function(c,i){
+      return '<div class="citem'+(i===0?' sel':'')+'" data-i="'+i+'"><span class="t">'+c.t+'</span><span class="mono k">'+c.k+'</span></div>';
+    }).join('') : '<div class="citem"><span class="t">Aucun résultat</span></div>';
+    cl.querySelectorAll('.citem[data-i]').forEach(function(el){
+      el.addEventListener('click',function(){ cur[+el.getAttribute('data-i')].a(); });
+      el.addEventListener('mouseenter',function(){ sel=+el.getAttribute('data-i'); mark(); });
+    });
+  }
+  function mark(){ cl.querySelectorAll('.citem').forEach(function(e,i){ e.classList.toggle('sel',i===sel); }); }
+  function openCmd(){ cmd.classList.add('on'); document.body.classList.add('lock'); cin.value=''; render(''); setTimeout(function(){cin.focus()},40); }
+  function closeCmd(){ cmd.classList.remove('on'); document.body.classList.remove('lock'); }
+  document.getElementById('openCmd').addEventListener('click',openCmd);
+  cmd.addEventListener('click',function(e){ if(e.target===cmd) closeCmd(); });
+  cin.addEventListener('input',function(){ render(cin.value); });
+  addEventListener('keydown',function(e){
+    var typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+    if((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); cmd.classList.contains('on')?closeCmd():openCmd(); return; }
+    if(e.key==='Escape') closeCmd();
+    if(!cmd.classList.contains('on')){
+      if(!typing && e.key.toLowerCase()==='t') toggleTheme();
+      if(!typing && e.key==='/'){ e.preventDefault(); openCmd(); }
+      return;
+    }
+    if(e.key==='ArrowDown'){ e.preventDefault(); sel=Math.min(sel+1,cur.length-1); mark(); cl.children[sel].scrollIntoView({block:'nearest'}); }
+    if(e.key==='ArrowUp'){ e.preventDefault(); sel=Math.max(sel-1,0); mark(); cl.children[sel].scrollIntoView({block:'nearest'}); }
+    if(e.key==='Enter' && cur[sel]) cur[sel].a();
+  });
+})();
+</script>
+</body>
+</html>
